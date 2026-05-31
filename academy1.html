@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>학원관리</title>
+<title>학원관리 - 생각키움연구소</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -20,11 +20,14 @@ button,input,select,textarea{font-family:inherit}
 .bp:disabled{opacity:.5;cursor:not-allowed}
 .bs{background:#F3F4F6;color:#374151;border:none;border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px;cursor:pointer}
 .bd{background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.bg-btn{background:#FEF3C7;color:#92400E;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer}
 .fi{width:100%;padding:11px 14px;border-radius:11px;border:2px solid #E5E7EB;font-size:14px;outline:none;background:#fff;transition:border-color .2s}
 .fi:focus{border-color:#6366F1}
-.tabs{display:flex;gap:5px;margin-bottom:12px}
-.tab{flex:1;padding:9px;border-radius:11px;border:2px solid #E5E7EB;background:#fff;color:#6B7280;font-weight:600;font-size:13px;cursor:pointer}
+.tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.tab{flex:1;min-width:60px;padding:9px 6px;border-radius:11px;border:2px solid #E5E7EB;background:#fff;color:#6B7280;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap}
 .tab.on{border-color:transparent;background:#6366F1;color:#fff;font-weight:800}
+.tab.quit-tab{border-color:#FCD34D;color:#92400E;background:#FFFBEB}
+.tab.quit-tab.on{background:linear-gradient(135deg,#F59E0B,#D97706);border-color:transparent;color:#fff}
 .dtabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:none}
 .dtabs::-webkit-scrollbar{display:none}
 .dtab{flex-shrink:0;padding:7px 11px;border-radius:11px;border:2px solid #E5E7EB;background:#fff;cursor:pointer;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:44px;color:#6B7280;font-weight:500}
@@ -52,6 +55,16 @@ button,input,select,textarea{font-family:inherit}
 .errmsg{background:#FEF2F2;color:#DC2626;border-radius:9px;padding:10px 13px;font-size:13px;margin-top:8px;border:1px solid #FECACA}
 .sec-ttl{font-size:14px;font-weight:700;color:#374151;margin-bottom:9px}
 .loading{text-align:center;padding:32px;color:#9CA3AF;font-size:13px}
+/* 다운로드 버튼 */
+.dl-btn{background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.dl-panel{background:#fff;border-radius:14px;border:2px solid #D1FAE5;margin-bottom:12px;overflow:hidden}
+.dl-panel-hd{padding:11px 14px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-bottom:1px solid #D1FAE5;display:flex;align-items:center;gap:7px}
+/* 그만둔 학생 */
+.quit-card{background:#FFFBEB;border-radius:14px;padding:13px;border:1.5px solid #FCD34D;cursor:pointer;display:flex;align-items:center;gap:11px;margin-bottom:8px;text-align:left;box-shadow:0 2px 8px rgba(0,0,0,.04);opacity:.85}
+.restore-btn{background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer}
+/* 회차 추가 모달 */
+.lesson-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:250;backdrop-filter:blur(4px);padding:20px}
+.lesson-modal-c{background:#fff;border-radius:22px;width:100%;max-width:400px;padding:24px 20px}
 </style>
 </head>
 <body>
@@ -66,8 +79,9 @@ button,input,select,textarea{font-family:inherit}
   </div>
   <div id="SRCH_RES"></div>
 </div>
+
 <script>
-/* ══ Firebase 설정 (academy1용 - 생각키움연구소) ══ */
+/* ══ Firebase 설정 ══ */
 var FB1={apiKey:"AIzaSyDCNm3RzgKOsVsG864yopYaY9jnOycDVIc",authDomain:"project-402538a5-a8b1-40a1-a97.firebaseapp.com",databaseURL:"https://project-402538a5-a8b1-40a1-a97-default-rtdb.firebaseio.com",projectId:"project-402538a5-a8b1-40a1-a97",storageBucket:"project-402538a5-a8b1-40a1-a97.firebasestorage.app",messagingSenderId:"414728841659",appId:"1:414728841659:web:0d883c5ce39b0ab679fc9e"};
 var ADMIN_EMAIL="noella7154@gmail.com";
 var ACAD_NAME="생각키움연구소";
@@ -78,10 +92,14 @@ var TIMES=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:0
 
 /* ══ 앱 상태 ══ */
 var G={user:null,admin:false,
-  stuData:{},   /* 학생 기본정보만 (노트 제외) */
-  curNotes:{},  /* 현재 보는 학생의 노트만 */
+  stuData:{},
+  quitData:{},   /* 그만둔 학생 */
+  curNotes:{},
   view:'sch',prevView:'sch',selDay:'월',sid:null,
-  notif:null,form:false,esid:null,fday:'월',enid:null};
+  notif:null,form:false,esid:null,fday:'월',enid:null,
+  showAddLesson:false,  /* 회차 추가 모달 */
+  addLessonSid:null,
+  showQuit:false};  /* 그만둔 학생 보기 여부 */
 var _saving=false,_ime=false,_pend=false,_noteListener=null;
 
 /* ══ 초성 검색 ══ */
@@ -95,7 +113,6 @@ function xe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 function rem(s){return Math.max(0,(+s.totalLessons||0)-(+s.usedLessons||0))}
 function rc(r){return r<=0?'#EF4444':r===1?'#F97316':r<=3?'#F59E0B':'#10B981'}
 
-/* ══ ES5 호환 객체→배열 변환 ══ */
 function objArr(obj){
   var r=[],keys,i,k,s,copy,p;
   if(!obj)return r;
@@ -120,13 +137,18 @@ function noteArr(obj){
   return r.sort(function(a,b){return(+a.lessonNum||0)-(+b.lessonNum||0);});
 }
 function allStu(){return objArr(G.stuData);}
-function stuById(id){var s=G.stuData[id];if(!s)return null;var c={},p;for(p in s){if(Object.prototype.hasOwnProperty.call(s,p))c[p]=s[p];}c.id=c.id||id;c.totalLessons=+c.totalLessons||0;c.usedLessons=+c.usedLessons||0;return c;}
+function allQuit(){return objArr(G.quitData);}
+function stuById(id){
+  var s=G.stuData[id]||G.quitData[id];
+  if(!s)return null;
+  var c={},p;for(p in s){if(Object.prototype.hasOwnProperty.call(s,p))c[p]=s[p];}
+  c.id=c.id||id;c.totalLessons=+c.totalLessons||0;c.usedLessons=+c.usedLessons||0;return c;
+}
 
 /* ══ Firebase ══ */
 firebase.initializeApp(FB1);
 var auth=firebase.auth(),db=firebase.database();
 
-/* ══ IME 추적 ══ */
 document.addEventListener('compositionstart',function(){_ime=true;});
 document.addEventListener('compositionend',function(){_ime=false;if(_pend){_pend=false;R();}});
 document.addEventListener('keydown',function(e){
@@ -134,7 +156,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&e.target.id==='PW_IN')doLogin();
 });
 
-/* ══ 최적화: 학생 기본정보만 로드 (노트 제외) ══ */
+/* ══ 리스너: 재학생 ══ */
 function startListen(){
   db.ref('students').on('value',function(snap){
     var data=snap.val()||{},keys,i,k,s,basic,p;
@@ -142,16 +164,10 @@ function startListen(){
     keys=Object.keys(data);
     for(i=0;i<keys.length;i++){
       k=keys[i];s=data[k];basic={};
-      /* 노트 제외하고 기본정보만 저장 */
-      for(p in s){
-        if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes'){
-          basic[p]=s[p];
-        }
-      }
+      for(p in s){if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes')basic[p]=s[p];}
       basic.id=basic.id||k;
       basic.totalLessons=+basic.totalLessons||0;
       basic.usedLessons=+basic.usedLessons||0;
-      /* 완료 알림 */
       if(G.admin&&rem(basic)<=0&&!basic.notified){
         showToast(basic.name+' 학생의 수업이 모두 완료되었습니다!');
         db.ref('students/'+k+'/notified').set(true);
@@ -160,18 +176,36 @@ function startListen(){
     }
     safeR();
   });
+  /* 그만둔 학생 리스너 */
+  db.ref('quit_students').on('value',function(snap){
+    var data=snap.val()||{},keys,i,k,s,basic,p;
+    G.quitData={};
+    keys=Object.keys(data);
+    for(i=0;i<keys.length;i++){
+      k=keys[i];s=data[k];basic={};
+      for(p in s){if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes')basic[p]=s[p];}
+      basic.id=basic.id||k;
+      basic.totalLessons=+basic.totalLessons||0;
+      basic.usedLessons=+basic.usedLessons||0;
+      G.quitData[k]=basic;
+    }
+    safeR();
+  });
 }
 
-/* ══ 최적화: 학생 선택 시 해당 학생 노트만 로드 ══ */
+/* ══ 노트 리스너 ══ */
 function loadNotes(sid){
-  /* 이전 리스너 해제 */
-  if(_noteListener){db.ref('students/'+_noteListener+'/notes').off();_noteListener=null;}
+  if(_noteListener){
+    var prevRef=G.stuData[_noteListener]?'students':'quit_students';
+    db.ref(prevRef+'/'+_noteListener+'/notes').off();
+    _noteListener=null;
+  }
   G.curNotes={};
   if(!sid)return;
   _noteListener=sid;
-  db.ref('students/'+sid+'/notes').on('value',function(snap){
+  var refPath=G.stuData[sid]?'students':'quit_students';
+  db.ref(refPath+'/'+sid+'/notes').on('value',function(snap){
     G.curNotes=snap.val()||{};
-    /* 노트 로드 후 상세화면 다시 렌더 */
     if(G.view==='det'&&G.sid===sid)R();
   });
 }
@@ -188,28 +222,65 @@ function saveStu(){
   var ne=document.getElementById('F_NAME');
   if(!ne||!ne.value.trim()){alert('이름을 입력해 주세요.');return;}
   _saving=true;
-  var id=G.esid||uid(),ex=G.stuData[id]||{};
+
+  /* ★ 수정 시 기존 id 사용, 신규 시에만 새 uid 생성 */
+  var id=G.esid||uid();
+  var ex=G.stuData[id]||{};
   var obj={},p;
   for(p in ex){if(Object.prototype.hasOwnProperty.call(ex,p))obj[p]=ex[p];}
-  obj.id=id;obj.name=ne.value.trim();
+  obj.id=id;
+  obj.name=ne.value.trim();
   obj.contact=(document.getElementById('F_CONTACT')||{}).value||'';
   obj.birthdate=(document.getElementById('F_BIRTH')||{}).value||'';
-  obj.day=G.fday||'월';obj.time=(document.getElementById('F_TIME')||{}).value||'15:00';
+  obj.day=G.fday||'월';
+  obj.time=(document.getElementById('F_TIME')||{}).value||'15:00';
   obj.totalLessons=parseInt((document.getElementById('F_TOTAL')||{}).value)||10;
   obj.usedLessons=parseInt((document.getElementById('F_USED')||{}).value)||0;
-  obj.notified=ex.notified||false;obj.createdAt=ex.createdAt||new Date().toISOString();
+  obj.notified=ex.notified||false;
+  obj.createdAt=ex.createdAt||new Date().toISOString();
+
+  /* ★ update 사용 → 기존 데이터(노트 포함) 유지 */
   db.ref('students/'+id).update(obj)
-    .then(function(){_saving=false;G.form=false;G.esid=null;})
+    .then(function(){_saving=false;G.form=false;G.esid=null;showToast('✅ 저장되었습니다.');})
     .catch(function(){_saving=false;alert('저장 오류가 발생했습니다.');});
 }
+
 function delStu(id){
   if(!confirm('정말 삭제하시겠습니까?'))return;
   if(_noteListener===id){db.ref('students/'+id+'/notes').off();_noteListener=null;}
   db.ref('students/'+id).remove();
   G.sid=null;G.view=G.prevView||'sch';R();
 }
+
+/* ★ 수업 종료 후 회차 추가 모달 열기 */
+function openAddLesson(sid){
+  G.showAddLesson=true;
+  G.addLessonSid=sid;
+  R();
+}
+function closeAddLesson(){
+  G.showAddLesson=false;
+  G.addLessonSid=null;
+  R();
+}
+/* ★ 실제 회차 추가 (횟수 리셋 후 추가) */
+function doAddLesson(sid){
+  var addEl=document.getElementById('ADD_LESSON_CNT');
+  var add=parseInt(addEl?addEl.value:10)||10;
+  if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
+  var s=stuById(sid);if(!s)return;
+  /* 현재 진행한 횟수는 유지, 총 횟수만 늘림 */
+  var newTotal=(+s.totalLessons||0)+add;
+  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+  G.showAddLesson=false;
+  G.addLessonSid=null;
+  showToast('✅ '+add+'회 추가되었습니다! (총 '+newTotal+'회)');
+}
+
 function addLesson(sid){
   var s=stuById(sid);if(!s)return;
+  /* ★ 남은 수업 0이면 추가 모달로 */
+  if(rem(s)<=0){openAddLesson(sid);return;}
   var nu=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
   var nid=uid();
   var upd={usedLessons:nu};
@@ -218,18 +289,63 @@ function addLesson(sid){
   db.ref('students/'+sid).update(upd);
   var r=Math.max(0,(+s.totalLessons||0)-nu);
   if(r===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
+  if(r===0)showToast('✅ '+s.name+' 학생 모든 수업 완료! 재등록을 안내하거나 수업을 추가하세요.');
 }
+
 function saveNote(sid,nid){
   var ta=document.getElementById('NOTE_TA');if(!ta)return;
-  db.ref('students/'+sid+'/notes/'+nid+'/content').set(ta.value);
+  var refPath=G.stuData[sid]?'students':'quit_students';
+  db.ref(refPath+'/'+sid+'/notes/'+nid+'/content').set(ta.value);
   G.enid=null;R();
 }
 function delNote(sid,nid){
   if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
   var s=stuById(sid);
-  db.ref('students/'+sid+'/notes/'+nid).remove();
-  db.ref('students/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
+  var refPath=G.stuData[sid]?'students':'quit_students';
+  db.ref(refPath+'/'+sid+'/notes/'+nid).remove();
+  db.ref(refPath+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
 }
+
+/* ★ 그만둔 학생으로 이동 */
+function moveToQuit(id){
+  if(!confirm('이 학생을 "그만둔 학생"으로 이동하시겠습니까?\n수업 기록은 보존됩니다.'))return;
+  var s=G.stuData[id];if(!s)return;
+  /* 전체 데이터(노트 포함) 읽어서 quit_students로 복사 */
+  db.ref('students/'+id).once('value',function(snap){
+    var data=snap.val();if(!data)return;
+    data.quitDate=new Date().toISOString();
+    db.ref('quit_students/'+id).set(data).then(function(){
+      db.ref('students/'+id).remove();
+      if(_noteListener===id){db.ref('students/'+id+'/notes').off();_noteListener=null;}
+      G.sid=null;G.view='quit';G.curNotes={};
+      showToast('📦 그만둔 학생으로 이동했습니다.');
+    });
+  });
+}
+
+/* ★ 그만둔 학생 복귀 */
+function restoreStudent(id){
+  if(!confirm('이 학생을 재학생으로 복귀시키겠습니까?'))return;
+  db.ref('quit_students/'+id).once('value',function(snap){
+    var data=snap.val();if(!data)return;
+    delete data.quitDate;
+    data.notified=false;
+    db.ref('students/'+id).set(data).then(function(){
+      db.ref('quit_students/'+id).remove();
+      if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
+      showToast('✅ 재학생으로 복귀되었습니다.');
+    });
+  });
+}
+
+/* ★ 그만둔 학생 완전 삭제 */
+function delQuitStu(id){
+  if(!confirm('완전히 삭제하시겠습니까?\n(수업 기록 포함 모두 삭제됩니다)'))return;
+  if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
+  db.ref('quit_students/'+id).remove();
+  G.sid=null;G.view='quit';G.curNotes={};R();
+}
+
 function setFday(d){
   G.fday=d;
   var i,b,dc,on;
@@ -253,7 +369,13 @@ function doLogin(){
 function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut();}
 function goView(v){G.prevView=G.view;G.view=v;R();}
 function goStu(id){G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;loadNotes(id);R();}
-function goBack(){if(_noteListener){db.ref('students/'+_noteListener+'/notes').off();_noteListener=null;}G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();}
+function goBack(){
+  if(_noteListener){
+    var pr=G.stuData[_noteListener]?'students':'quit_students';
+    db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;
+  }
+  G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();
+}
 function selDay(d){G.selDay=d;R();}
 function openAdd(){G.esid=null;G.fday='월';G.form=true;R();}
 function openEdit(id){var s=stuById(id);if(!s)return;G.esid=id;G.fday=s.day||'월';G.form=true;R();}
@@ -272,6 +394,95 @@ function doSearch(){
 var _toastTimer;
 function showToast(msg){G.notif=msg;R();clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){G.notif=null;R();},6000);}
 
+/* ══ ★ 다운로드 기능 ══ */
+
+/* CSV 이스케이프 */
+function csvEsc(v){
+  var s=String(v||'');
+  if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0){
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+  return s;
+}
+
+/* BOM + CSV 다운로드 */
+function downloadCSV(filename,csvStr){
+  var bom='\uFEFF';
+  var blob=new Blob([bom+csvStr],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+
+/* ★ 학생 정보 다운로드 */
+function downloadStudentInfo(){
+  var ss=allStu();
+  if(!ss.length){alert('다운로드할 학생 정보가 없습니다.');return;}
+  ss.sort(function(a,b){return a.day.localeCompare(b.day)||a.time.localeCompare(b.time);});
+  var rows=['이름,생년월일,연락처,수업요일,수업시간,총수업횟수,진행횟수,남은횟수,등록일'];
+  var i,s;
+  for(i=0;i<ss.length;i++){
+    s=ss[i];
+    rows.push([
+      csvEsc(s.name),csvEsc(s.birthdate),csvEsc(s.contact),
+      csvEsc(s.day),csvEsc(s.time),
+      s.totalLessons,s.usedLessons,rem(s),
+      csvEsc(s.createdAt?s.createdAt.slice(0,10):'')
+    ].join(','));
+  }
+  var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  downloadCSV('학생정보_'+today+'.csv',rows.join('\n'));
+  showToast('📥 학생 정보 다운로드 완료!');
+}
+
+/* ★ 수업 메모 다운로드 (모든 학생 노트를 한 번에 읽어서 내보내기) */
+function downloadAllNotes(){
+  showToast('⏳ 수업 메모를 불러오는 중...');
+  db.ref('students').once('value',function(snap){
+    var data=snap.val()||{};
+    var rows=['학생이름,회차,날짜,수업내용'];
+    var keys=Object.keys(data),i,k,s,ns,nkeys,j,nk,n;
+    var hasAny=false;
+    for(i=0;i<keys.length;i++){
+      k=keys[i];s=data[k];
+      if(!s||!s.notes)continue;
+      ns=s.notes;nkeys=Object.keys(ns);
+      nkeys.sort(function(a,b){return(+ns[a].lessonNum||0)-(+ns[b].lessonNum||0);});
+      for(j=0;j<nkeys.length;j++){
+        nk=nkeys[j];n=ns[nk];hasAny=true;
+        rows.push([csvEsc(s.name||''),n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));
+      }
+    }
+    if(!hasAny){showToast('📭 저장된 수업 메모가 없습니다.');return;}
+    var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    downloadCSV('수업메모_'+today+'.csv',rows.join('\n'));
+    showToast('📥 수업 메모 다운로드 완료!');
+  });
+}
+
+/* ★ 특정 학생 수업메모 다운로드 */
+function downloadStudentNotes(sid){
+  var s=stuById(sid);if(!s)return;
+  var refPath=G.stuData[sid]?'students':'quit_students';
+  db.ref(refPath+'/'+sid+'/notes').once('value',function(snap){
+    var notes=snap.val()||{};
+    var keys=Object.keys(notes);
+    if(!keys.length){showToast('📭 '+s.name+' 학생의 수업 메모가 없습니다.');return;}
+    var rows=['회차,날짜,수업내용'];
+    var ns=[];var i,k,n;
+    for(i=0;i<keys.length;i++){k=keys[i];n=notes[k];n.id=n.id||k;ns.push(n);}
+    ns.sort(function(a,b){return(+a.lessonNum||0)-(+b.lessonNum||0);});
+    for(i=0;i<ns.length;i++){
+      n=ns[i];
+      rows.push([n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));
+    }
+    var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    downloadCSV(s.name+'_수업메모_'+today+'.csv',rows.join('\n'));
+    showToast('📥 '+s.name+' 메모 다운로드 완료!');
+  });
+}
+
 /* ══ HTML 빌더 ══ */
 function ringHtml(s){
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100),c=rc(r);
@@ -284,6 +495,21 @@ function stuCardHtml(s){
     +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid '+dc.bd+';background:'+dc.bg+';flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:12px;font-weight:800;color:'+dc.tx+'">'+s.day+'</span><span style="font-size:10px;color:'+dc.tx+';opacity:.8">'+s.time+'</span></div>'
     +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'+(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
     +ringHtml(s)+'</button>';
+}
+function quitCardHtml(s){
+  return '<div class="quit-card">'
+    +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid #FCD34D;background:#FFFBEB;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:18px">📦</span></div>'
+    +'<div style="flex:1;min-width:0;cursor:pointer" onclick="goStu(\''+s.id+'\')">'
+    +'<div style="font-weight:700;font-size:15px;color:#92400E">'+xe(s.name)+'</div>'
+    +(s.contact?'<div style="font-size:11px;color:#9CA3AF">📞 '+xe(s.contact)+'</div>':'')
+    +'<div style="font-size:10px;color:#D97706;margin-top:2px">'+s.day+'요일 '+s.time+' · 총 '+s.totalLessons+'회 중 '+s.usedLessons+'회</div>'
+    +(s.quitDate?'<div style="font-size:10px;color:#9CA3AF">퇴원: '+s.quitDate.slice(0,10)+'</div>':'')
+    +'</div>'
+    +(G.admin?'<div style="display:flex;flex-direction:column;gap:5px">'
+      +'<button class="restore-btn" onclick="restoreStudent(\''+s.id+'\')">복귀</button>'
+      +'<button class="bd" style="font-size:11px;padding:4px 9px" onclick="delQuitStu(\''+s.id+'\')">삭제</button>'
+      +'</div>':'')
+    +'</div>';
 }
 function alertPanelHtml(){
   var ss=allStu(),urg=[],done=[],i,s,r;
@@ -299,13 +525,39 @@ function alertPanelHtml(){
   return '<div class="ap"><div class="ap-hd"><span style="font-size:17px">⚠️</span><span style="font-weight:800;color:#F97316;font-size:14px">수업 임박 학생</span>'+bu+bd+'</div>'+rows+'</div>';
 }
 
+/* ★ 다운로드 패널 HTML */
+function dlPanelHtml(){
+  return '<div class="dl-panel">'
+    +'<div class="dl-panel-hd"><span style="font-size:17px">📥</span><span style="font-weight:800;color:#065F46;font-size:14px">데이터 내보내기</span></div>'
+    +'<div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px">'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="dl-btn" style="flex:1" onclick="downloadStudentInfo()">👥 학생정보 저장</button>'
+    +'<button class="dl-btn" style="flex:1;background:linear-gradient(135deg,#7C3AED,#6D28D9)" onclick="downloadAllNotes()">📝 수업메모 저장</button>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#9CA3AF;text-align:center">엑셀(CSV)로 저장됩니다. 엑셀에서 열면 바로 확인 가능!</div>'
+    +'</div></div>';
+}
+
 /* ══ 뷰 렌더러 ══ */
 function vLogin(){return '<div class="login-bg"><div class="login-card"><div style="text-align:center;margin-bottom:26px"><div style="font-size:52px;margin-bottom:8px">🏫</div><div style="font-size:21px;font-weight:800;color:#1E1B4B">'+ACAD_NAME+'</div><div style="font-size:13px;color:#6B7280;margin-top:4px">학원 관리 시스템</div></div><label class="lbl">이메일</label><input class="fi" type="email" id="EM_IN" placeholder="이메일 입력" autocomplete="email" style="margin-bottom:12px"><label class="lbl">비밀번호</label><input class="fi" type="password" id="PW_IN" placeholder="비밀번호 입력" autocomplete="current-password" style="margin-bottom:12px"><div id="LOGIN_ERR"></div><button class="bp" onclick="doLogin()" id="LOGIN_BTN" style="margin-top:6px">로그인</button><p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:14px">원장/선생님께 계정을 발급받으세요</p></div></div>';}
+
 function vHdr(){
-  var ss=allStu(),ac=0,dc2=0,i,r;
+  var ss=allStu(),ac=0,dc2=0,qs=allQuit().length,i,r;
   for(i=0;i<ss.length;i++){r=rem(ss[i]);if(r===1)ac++;else if(r<=0)dc2++;}
-  return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리'+(G.admin?'':'<span style="font-size:11px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:6px;margin-left:7px">강사</span>')+'</div></div><div style="display:flex;gap:6px">'+(G.admin?'<button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button>':'')+'<button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">전체 수강생</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박(1회)</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div></div></div>';}
-function vTabs(){var tabs=[['sch','📅 요일별'],['srch','🔍 검색'],['all','📋 전체']];var h='<div class="tabs">',i,t;for(i=0;i<tabs.length;i++){t=tabs[i];h+='<button class="tab'+(G.view===t[0]?' on':'')+'" onclick="goView(\''+t[0]+'\')">'+ t[1]+'</button>';}return h+'</div>';}
+  return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리'+(G.admin?'':'<span style="font-size:11px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:6px;margin-left:7px">강사</span>')+'</div></div><div style="display:flex;gap:6px">'+(G.admin?'<button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button>':'')+'<button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div><div class="hstat" style="cursor:pointer" onclick="goView(\'quit\')"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div></div></div>';
+}
+
+function vTabs(){
+  var tabs=[['sch','📅 요일별'],['srch','🔍 검색'],['all','📋 전체'],['quit','📦 퇴원']];
+  var h='<div class="tabs">',i,t;
+  for(i=0;i<tabs.length;i++){
+    t=tabs[i];
+    var cls='tab'+(t[0]==='quit'?' quit-tab':'')+(G.view===t[0]?' on':'');
+    h+='<button class="'+cls+'" onclick="goView(\''+t[0]+'\')">'+ t[1]+'</button>';
+  }
+  return h+'</div>';
+}
+
 function vSchedule(){
   var ss=allStu(),ds=[],i,s,cnt,d,dc,on,h='';
   for(i=0;i<ss.length;i++){if(ss[i].day===G.selDay)ds.push(ss[i]);}
@@ -317,52 +569,84 @@ function vSchedule(){
   else for(i=0;i<ds.length;i++)h+=stuCardHtml(ds[i]);
   return h;
 }
+
 function vAll(){
   var ss=allStu(),h='',i;
   ss.sort(function(a,b){return a.day.localeCompare(b.day)||a.time.localeCompare(b.time)||a.name.localeCompare(b.name);});
-  h='<div class="sec-ttl">전체 수강생 ('+ss.length+'명)</div>';
+  h='<div class="sec-ttl">재학생 전체 ('+ss.length+'명)</div>';
   if(!ss.length)h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div>'+(G.admin?'<br><button class="bp" onclick="openAdd()" style="padding:9px 20px;width:auto;margin-top:10px;font-size:13px">+ 학생 등록하기</button>':'')+'</div>';
   else for(i=0;i<ss.length;i++)h+=stuCardHtml(ss[i]);
   return h;
 }
+
+/* ★ 퇴원 학생 뷰 */
+function vQuit(){
+  var qs=allQuit(),h='',i;
+  qs.sort(function(a,b){return(b.quitDate||'').localeCompare(a.quitDate||'');});
+  h='<div class="sec-ttl">📦 퇴원 학생 ('+qs.length+'명)</div>';
+  if(G.admin){
+    h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:12px;color:#92400E">'
+      +'💡 퇴원 학생의 수업 기록은 그대로 보존됩니다.<br>복귀 버튼을 누르면 재학생으로 이동합니다.</div>';
+  }
+  if(!qs.length)h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">퇴원 학생이 없습니다</div></div>';
+  else for(i=0;i<qs.length;i++)h+=quitCardHtml(qs[i]);
+  return h;
+}
+
 function vDetail(){
   var s=stuById(G.sid);
   if(!s)return '<div class="empty"><div style="font-size:30px">😕</div><p style="font-size:13px">학생 정보를 찾을 수 없습니다</p></div>';
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100);
   var dc=DC[s.day]||DC['월'],c=rc(r);
+  var isQuit=!!G.quitData[G.sid];
   var ns=noteArr(G.curNotes),rev=[],i,n,h='';
   for(i=ns.length-1;i>=0;i--)rev.push(ns[i]);
 
   h='<button class="back-btn" onclick="goBack()">← 목록으로</button>';
+  if(isQuit){h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700">📦 퇴원 학생 (열람 전용)'+(G.admin?'&nbsp;&nbsp;<button class="restore-btn" style="font-size:12px" onclick="restoreStudent(\''+s.id+'\')">↩️ 복귀</button>':'')+'</div>';}
   h+='<div class="card" style="background:linear-gradient(135deg,'+dc.bg+',#fff);border:2px solid '+dc.bd+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
     +'<div><div style="font-size:22px;font-weight:800;color:#111827">'+xe(s.name)+'</div>'
     +'<div style="font-size:12px;color:#6B7280;margin-top:3px">'+(s.birthdate?'<span style="margin-right:10px">📅 '+xe(s.birthdate)+'</span>':'')+(s.contact?'<span>📞 '+xe(s.contact)+'</span>':'')+'</div></div>'
-    +(G.admin?'<div style="display:flex;gap:6px"><button onclick="openEdit(\''+s.id+'\')" style="background:#6366F1;color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">수정</button><button class="bd" onclick="delStu(\''+s.id+'\')">삭제</button></div>':'')
+    +(G.admin&&!isQuit?'<div style="display:flex;gap:6px"><button onclick="openEdit(\''+s.id+'\')" style="background:#6366F1;color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">수정</button><button class="bg-btn" onclick="moveToQuit(\''+s.id+'\')" style="font-size:11px;padding:5px 9px">퇴원</button><button class="bd" onclick="delStu(\''+s.id+'\')">삭제</button></div>':'')
+    +(G.admin&&isQuit?'<div style="display:flex;gap:6px"><button class="bd" onclick="delQuitStu(\''+s.id+'\')">삭제</button></div>':'')
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:11px;margin-top:13px;flex-wrap:wrap">'
     +'<div style="background:'+dc.bg+';border:2px solid '+dc.bd+';border-radius:10px;padding:5px 12px"><span style="font-weight:800;color:'+dc.tx+';font-size:14px">'+s.day+'요일 '+s.time+'</span></div>'
     +ringHtml(s)
     +'<div style="flex:1;min-width:100px"><div style="font-size:11px;color:#6B7280;margin-bottom:3px">수업 진행률</div><div class="pbar"><div class="pfill" style="width:'+p+'%;background:'+c+'"></div></div><div style="font-size:10px;color:#9CA3AF;margin-top:3px">'+(+s.usedLessons||0)+'회 완료 / 총 '+(+s.totalLessons||0)+'회 ('+r+'회 남음)</div></div></div>'
     +(r===1?'<div style="margin-top:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;font-size:13px;color:#F97316;font-weight:700">⚠️ 수업이 1회 남았습니다! 재등록을 안내해 주세요.</div>':'')
-    +(r<=0?'<div style="margin-top:10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:13px;color:#DC2626;font-weight:700">✅ 모든 수업이 완료되었습니다!</div>':'')
+    +(r<=0&&!isQuit?'<div style="margin-top:10px;background:#EEF2FF;border:1px solid #818CF8;border-radius:8px;padding:8px 12px;font-size:13px;color:#4338CA;font-weight:700">✅ 모든 수업 완료! <span style="font-size:12px">아래 버튼으로 수업을 추가하거나 퇴원 처리 하세요.</span></div>':'')
     +'</div>';
-  h+='<button class="bp" style="margin-bottom:14px" '+(r<=0?'disabled':'')+' onclick="addLesson(\''+s.id+'\')">'+(r<=0?'✓ 모든 수업 완료':'+ 수업 진행 (기록 추가)')+'</button>';
+
+  /* ★ 수업 진행 버튼: 완료여도 클릭하면 추가 모달 */
+  if(!isQuit){
+    h+='<button class="bp" style="margin-bottom:10px" onclick="addLesson(\''+s.id+'\')">'
+      +(r<=0?'🔄 수업 횟수 추가하기':'+ 수업 진행 (기록 추가)')+'</button>';
+  }
+
+  /* 수업메모 다운로드 버튼 */
+  h+='<button class="dl-btn" style="width:100%;justify-content:center;margin-bottom:14px" onclick="downloadStudentNotes(\''+s.id+'\')">📥 이 학생 수업메모 저장</button>';
+
   h+='<div class="sec-ttl">📝 수업 기록 ('+ns.length+'회)</div>';
   if(!ns.length){h+='<div style="text-align:center;color:#9CA3AF;padding:28px;background:#F9FAFB;border-radius:12px;font-size:13px"><div style="font-size:26px;margin-bottom:7px">📋</div>아직 수업 기록이 없습니다<br><span style="font-size:12px">위 버튼으로 수업을 기록하세요</span></div>';}
   else{
     for(i=0;i<rev.length;i++){
       n=rev[i];
       h+='<div class="nc"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>'
-        +'<div style="display:flex;gap:5px"><button onclick="G.enid=\''+n.id+'\';R()" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button><button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(\''+s.id+'\',\''+n.id+'\')">삭제</button></div></div>'
+        +'<div style="display:flex;gap:5px">'
+        +(!isQuit?'<button onclick="G.enid=\''+n.id+'\';R()" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button>':'')
+        +(G.admin?'<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(\''+s.id+'\',\''+n.id+'\')">삭제</button>':'')
+        +'</div></div>'
         +(G.enid===n.id
           ?'<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea><div style="display:flex;gap:7px;margin-top:8px"><button class="bp" style="flex:1;padding:9px;border-radius:10px;font-size:13px" onclick="saveNote(\''+s.id+'\',\''+n.id+'\')">저장</button><button class="bs" style="padding:9px 14px;border-radius:10px;font-size:13px" onclick="G.enid=null;R()">취소</button></div>'
-          :'<div style="font-size:13px;color:'+(n.content?'#374151':'#9CA3AF')+';line-height:1.6">'+(n.content||'✏️ 메모 버튼을 눌러 수업 내용을 입력하세요')+'</div>'
+          :'<div style="font-size:13px;color:'+(n.content?'#374151':'#9CA3AF')+';line-height:1.6;white-space:pre-wrap">'+(n.content||'✏️ 메모 버튼을 눌러 수업 내용을 입력하세요')+'</div>'
         )+'</div>';
     }
   }
   return h+'<div style="height:32px"></div>';
 }
+
 function vForm(){
   var s=G.esid?stuById(G.esid):null,sd=G.fday||(s?s.day:'월');
   var i,d,dc,on,h='';
@@ -379,6 +663,26 @@ function vForm(){
   return h+'</div></div>';
 }
 
+/* ★ 수업 횟수 추가 모달 */
+function vAddLessonModal(){
+  var s=stuById(G.addLessonSid);if(!s)return'';
+  return '<div class="lesson-modal" onclick="if(event.target===this)closeAddLesson()">'
+    +'<div class="lesson-modal-c">'
+    +'<div style="text-align:center;font-size:22px;margin-bottom:10px">🔄</div>'
+    +'<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">수업 횟수 추가</div>'
+    +'<div style="font-size:13px;color:#6B7280;text-align:center;margin-bottom:18px"><b>'+xe(s.name)+'</b> 학생의 모든 수업이 완료되었습니다.<br>추가할 수업 횟수를 입력해 주세요.</div>'
+    +'<div style="background:#F3F4F6;border-radius:11px;padding:13px;margin-bottom:16px">'
+    +'<div style="font-size:12px;color:#6B7280;margin-bottom:3px">현재: '+s.usedLessons+'/'+s.totalLessons+'회</div>'
+    +'<label class="lbl">추가할 수업 횟수</label>'
+    +'<input class="fi" type="number" id="ADD_LESSON_CNT" value="10" min="1" max="200" style="font-size:18px;font-weight:700;text-align:center">'
+    +'</div>'
+    +'<div style="display:flex;gap:9px">'
+    +'<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>'
+    +'<button class="bp" onclick="doAddLesson(\''+s.id+'\')" style="flex:2;border-radius:12px">✅ 추가하기</button>'
+    +'</div>'
+    +'</div></div>';
+}
+
 /* ══ 메인 렌더 ══ */
 function R(){
   var app=document.getElementById('app'),sb=document.getElementById('SRCH_BOX');
@@ -387,15 +691,42 @@ function R(){
   var toast=G.notif?'<div class="toast"><span style="font-size:22px">🔔</span><div style="flex:1;font-size:13px">'+xe(G.notif)+'</div><button onclick="G.notif=null;R()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;opacity:.7">✕</button></div>':'';
   var body='';
   if(!G.admin)body+='<div class="ibanner"><span style="font-size:17px">✏️</span><div><div style="font-weight:700;color:#065F46;font-size:13px">강사 모드</div><div style="font-size:11px;color:#047857">수업 진행·메모 작성/수정/삭제 가능</div></div></div>';
-  if(G.view==='det'&&G.sid){body+=vDetail();}
-  else{body+=vTabs();body+=alertPanelHtml();if(G.view==='sch')body+=vSchedule();else if(G.view==='all')body+=vAll();}
-  app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'+(G.form&&G.admin?vForm():'');
+
+  if(G.view==='det'&&G.sid){
+    body+=vDetail();
+  } else {
+    body+=vTabs();
+    if(G.view==='quit'){
+      body+=vQuit();
+    } else {
+      body+=alertPanelHtml();
+      /* ★ 원장님만 다운로드 패널 표시 */
+      if(G.admin)body+=dlPanelHtml();
+      if(G.view==='sch')body+=vSchedule();
+      else if(G.view==='all')body+=vAll();
+    }
+  }
+
+  app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
+    +(G.form&&G.admin?vForm():'')
+    +(G.showAddLesson&&G.addLessonSid?vAddLessonModal():'');
+
   if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta)ta.focus();}
 }
 
 auth.onAuthStateChanged(function(user){
   if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();}
-  else{G.user=null;G.admin=false;G.stuData={};G.curNotes={};if(_noteListener){db.ref('students/'+_noteListener+'/notes').off();_noteListener=null;}db.ref('students').off();R();}
+  else{
+    G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};
+    if(_noteListener){
+      db.ref('students/'+_noteListener+'/notes').off();
+      db.ref('quit_students/'+_noteListener+'/notes').off();
+      _noteListener=null;
+    }
+    db.ref('students').off();
+    db.ref('quit_students').off();
+    R();
+  }
 });
 </script>
 </body>

@@ -236,6 +236,7 @@ function saveStu(){
   obj.time=(document.getElementById('F_TIME')||{}).value||'15:00';
   obj.totalLessons=parseInt((document.getElementById('F_TOTAL')||{}).value)||10;
   obj.usedLessons=parseInt((document.getElementById('F_USED')||{}).value)||0;
+  obj.level=(document.getElementById('F_LEVEL')||{}).value||'기타';
   obj.notified=ex.notified||false;
   obj.createdAt=ex.createdAt||new Date().toISOString();
 
@@ -491,9 +492,11 @@ function ringHtml(s){
 function stuCardHtml(s){
   var dc=DC[s.day]||DC['월'],r=rem(s);
   var bStyle=r===1?'border:2px solid #FED7AA':r<=0?'border:1.5px solid #FECACA;opacity:.88':'border:1.5px solid #E5E7EB';
+  var lvs=LEVEL_STYLE[s.level||'기타']||LEVEL_STYLE['기타'];
+  var lvBadge=s.level&&s.level!=='기타'?'<span style="font-size:10px;color:'+lvs.tx+';background:'+lvs.bg+';border:1px solid '+lvs.bd+';border-radius:5px;padding:1px 6px;font-weight:700">'+lvs.icon+' '+s.level+'</span>':'';
   return '<button class="sc" style="'+bStyle+'" onclick="goStu(\''+s.id+'\')">'
     +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid '+dc.bd+';background:'+dc.bg+';flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:12px;font-weight:800;color:'+dc.tx+'">'+s.day+'</span><span style="font-size:10px;color:'+dc.tx+';opacity:.8">'+s.time+'</span></div>'
-    +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'+(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
+    +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+lvBadge+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'+(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
     +ringHtml(s)+'</button>';
 }
 function quitCardHtml(s){
@@ -558,15 +561,49 @@ function vTabs(){
   return h+'</div>';
 }
 
+/* 등급 정렬 순서 */
+var LEVEL_ORDER={'선수':0,'상급':1,'중급':2,'기타':3};
+var LEVEL_STYLE={
+  '선수':{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185',icon:'🥇'},
+  '상급':{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C',icon:'🥈'},
+  '중급':{bg:'#ECFDF5',tx:'#065F46',bd:'#34D399',icon:'🥉'},
+  '기타':{bg:'#F3F4F6',tx:'#374151',bd:'#9CA3AF',icon:'📚'}
+};
+
 function vSchedule(){
   var ss=allStu(),ds=[],i,s,cnt,d,dc,on,h='';
   for(i=0;i<ss.length;i++){if(ss[i].day===G.selDay)ds.push(ss[i]);}
-  ds.sort(function(a,b){return a.time.localeCompare(b.time);});
+  /* 등급순 → 시간순 정렬 */
+  ds.sort(function(a,b){
+    var la=LEVEL_ORDER[a.level||'기타']||3,lb=LEVEL_ORDER[b.level||'기타']||3;
+    return la!==lb?la-lb:a.time.localeCompare(b.time);
+  });
   h+='<div class="dtabs">';
   for(i=0;i<DAYS.length;i++){d=DAYS[i];cnt=0;for(var j=0;j<ss.length;j++){if(ss[j].day===d)cnt++;}dc=DC[d];on=(G.selDay===d);h+='<button class="dtab" onclick="selDay(\''+d+'\')" style="border-color:'+(on?dc.bd:'#E5E7EB')+';background:'+(on?dc.bg:'#fff')+';color:'+(on?dc.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';}
-  h+='</div><div class="sec-ttl">'+G.selDay+'요일 수강생 ('+ds.length+'명)</div>';
-  if(!ds.length)h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
-  else for(i=0;i<ds.length;i++)h+=stuCardHtml(ds[i]);
+  h+='</div>';
+  if(!ds.length){
+    h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
+    return h;
+  }
+  /* 등급별 그룹 헤더와 함께 출력 */
+  var LEVELS=['선수','상급','중급','기타'];
+  var groups={},lv,ls,k;
+  for(k=0;k<LEVELS.length;k++)groups[LEVELS[k]]=[];
+  for(i=0;i<ds.length;i++){lv=ds[i].level||'기타';if(!groups[lv])groups[lv]=[];groups[lv].push(ds[i]);}
+  h+='<div style="font-size:12px;color:#6B7280;margin-bottom:10px">'+G.selDay+'요일 전체 '+ds.length+'명</div>';
+  for(k=0;k<LEVELS.length;k++){
+    lv=LEVELS[k];ls=groups[lv];
+    if(!ls||!ls.length)continue;
+    var lvs=LEVEL_STYLE[lv]||LEVEL_STYLE['기타'];
+    h+='<div style="background:'+lvs.bg+';border:2px solid '+lvs.bd+';border-radius:12px;padding:8px 12px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+      +'<span style="font-size:16px">'+lvs.icon+'</span>'
+      +'<span style="font-weight:800;color:'+lvs.tx+';font-size:14px">'+lv+'</span>'
+      +'<span style="background:'+lvs.bd+';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700">'+ls.length+'명</span>'
+      +'</div>';
+    for(i=0;i<ls.length;i++)h+=stuCardHtml(ls[i]);
+    h+='</div>';
+  }
   return h;
 }
 
@@ -606,7 +643,9 @@ function vDetail(){
   if(isQuit){h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700">📦 퇴원 학생 (열람 전용)'+(G.admin?'&nbsp;&nbsp;<button class="restore-btn" style="font-size:12px" onclick="restoreStudent(\''+s.id+'\')">↩️ 복귀</button>':'')+'</div>';}
   h+='<div class="card" style="background:linear-gradient(135deg,'+dc.bg+',#fff);border:2px solid '+dc.bd+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="font-size:22px;font-weight:800;color:#111827">'+xe(s.name)+'</div>'
+    +'<div><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><div style="font-size:22px;font-weight:800;color:#111827">'+xe(s.name)+'</div>'
+    +(s.level&&s.level!=='기타'?'<span style="font-size:12px;color:'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).tx+';background:'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).bg+';border:1.5px solid '+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).bd+';border-radius:7px;padding:2px 9px;font-weight:800">'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).icon+' '+s.level+'</span>':'')
+    +'</div>'
     +'<div style="font-size:12px;color:#6B7280;margin-top:3px">'+(s.birthdate?'<span style="margin-right:10px">📅 '+xe(s.birthdate)+'</span>':'')+(s.contact?'<span>📞 '+xe(s.contact)+'</span>':'')+'</div></div>'
     +(G.admin&&!isQuit?'<div style="display:flex;gap:6px"><button onclick="openEdit(\''+s.id+'\')" style="background:#6366F1;color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">수정</button><button class="bg-btn" onclick="moveToQuit(\''+s.id+'\')" style="font-size:11px;padding:5px 9px">퇴원</button><button class="bd" onclick="delStu(\''+s.id+'\')">삭제</button></div>':'')
     +(G.admin&&isQuit?'<div style="display:flex;gap:6px"><button class="bd" onclick="delQuitStu(\''+s.id+'\')">삭제</button></div>':'')
@@ -658,9 +697,28 @@ function vForm(){
   for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];on=(sd===d);h+='<button id="FBTN_'+d+'" onclick="setFday(\''+d+'\')" style="'+(on?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
   h+='</div><label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
   for(i=0;i<TIMES.length;i++)h+='<option value="'+TIMES[i]+'"'+(TIMES[i]===(s?s.time:'15:00')?' selected':'')+'>'+TIMES[i]+'</option>';
-  h+='</select><div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px"><div><label class="lbl">총 수업 횟수</label><input class="fi" type="number" id="F_TOTAL" min="1" value="'+(s?s.totalLessons:10)+'"></div><div><label class="lbl">진행한 횟수</label><input class="fi" type="number" id="F_USED" min="0" value="'+(s?s.usedLessons:0)+'"></div></div>';
+  h+='</select>';
+  /* 등급 선택 */
+  var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst,lvon;
+  h+='<label class="lbl">등급</label><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">';
+  for(lvi=0;lvi<LVLIST.length;lvi++){
+    lvn=LVLIST[lvi];lvst=LEVEL_STYLE[lvn];lvon=(curLv===lvn);
+    h+='<button type="button" id="FLVBTN_'+lvn+'" onclick="setFlevel(\''+lvn+'\')" style="'+(lvon?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer">'+lvst.icon+' '+lvn+'</button>';
+  }
+  h+='</div><input type="hidden" id="F_LEVEL" value="'+curLv+'">';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px"><div><label class="lbl">총 수업 횟수</label><input class="fi" type="number" id="F_TOTAL" min="1" value="'+(s?s.totalLessons:10)+'"></div><div><label class="lbl">진행한 횟수</label><input class="fi" type="number" id="F_USED" min="0" value="'+(s?s.usedLessons:0)+'"></div></div>';
   h+='<div style="display:flex;gap:9px"><button class="bs" onclick="closeForm()" style="flex:1;padding:12px;border-radius:12px">취소</button><button class="bp" onclick="saveStu()" style="flex:2;border-radius:12px">'+(s?'수정 완료':'등록하기')+'</button></div>';
   return h+'</div></div>';
+}
+
+function setFlevel(lv){
+  var fi=document.getElementById('F_LEVEL');if(fi)fi.value=lv;
+  var LVLIST=['선수','상급','중급','기타'],i,lvn,lvst,b;
+  for(i=0;i<LVLIST.length;i++){
+    lvn=LVLIST[i];lvst=LEVEL_STYLE[lvn];b=document.getElementById('FLVBTN_'+lvn);if(!b)continue;
+    var on=(lvn===lv);
+    b.style.cssText=(on?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer';
+  }
 }
 
 /* ★ 수업 횟수 추가 모달 */

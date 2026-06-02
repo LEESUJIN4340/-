@@ -641,9 +641,10 @@ function vForm(){
   h+='<label class="lbl">이름 *</label><input class="fi" type="text" id="F_NAME" value="'+xe(s?s.name||'':'')+'" placeholder="학생 이름" style="margin-bottom:12px">';
   h+='<label class="lbl">연락처</label><input class="fi" type="tel" id="F_CONTACT" value="'+xe(s?s.contact||'':'')+'" placeholder="010-0000-0000" style="margin-bottom:12px">';
   h+='<label class="lbl">생년월일</label><input class="fi" type="text" id="F_BIRTH" value="'+xe(s?s.birthdate||'':'')+'" placeholder="예: 2015-03-15" style="margin-bottom:12px">';
-  h+='<label class="lbl">수강 요일</label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">';
-  for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];on=(sd===d);h+='<button id="FBTN_'+d+'" onclick="setFday(\''+d+'\')" style="'+(on?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
-  h+='</div><label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
+  h+='<label class="lbl">수강 요일 <span style="font-size:11px;color:#6B7280;font-weight:400">(여러 요일 선택 가능)</span></label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">';
+  for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];var on2=(G.fdays.indexOf(d)>=0);h+='<button id="FBTN_'+d+'" onclick="toggleFday(\''+d+'\')" style="'+(on2?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
+  h+='</div><div style="font-size:11px;color:#6B7280;margin-bottom:12px">선택된 요일: <b id="FDAYS_LABEL" style="color:#4338CA">'+G.fdays.join(', ')+'</b></div>';
+  h+='<label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
   for(i=0;i<TIMES.length;i++)h+='<option value="'+TIMES[i]+'"'+(TIMES[i]===(s?s.time:'15:00')?' selected':'')+'>'+TIMES[i]+'</option>';
   h+='</select>';
   var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst,lvon;

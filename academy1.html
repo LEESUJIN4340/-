@@ -96,7 +96,7 @@ var G={user:null,admin:false,
   quitData:{},   /* 그만둔 학생 */
   curNotes:{},
   view:'sch',prevView:'sch',selDay:'월',sid:null,
-  notif:null,form:false,esid:null,fday:'월',enid:null,
+  notif:null,form:false,esid:null,fdays:['월'],enid:null,
   showAddLesson:false,  /* 회차 추가 모달 */
   addLessonSid:null,
   showQuit:false};  /* 그만둔 학생 보기 여부 */
@@ -232,7 +232,10 @@ function saveStu(){
   obj.name=ne.value.trim();
   obj.contact=(document.getElementById('F_CONTACT')||{}).value||'';
   obj.birthdate=(document.getElementById('F_BIRTH')||{}).value||'';
-  obj.day=G.fday||'월';
+  /* ★ 다중 요일: days 배열 저장, day는 첫번째 요일(하위호환) */
+  var selDays=G.fdays.length?G.fdays:['월'];
+  obj.days=selDays.join(',');
+  obj.day=selDays[0];
   obj.time=(document.getElementById('F_TIME')||{}).value||'15:00';
   obj.totalLessons=parseInt((document.getElementById('F_TOTAL')||{}).value)||10;
   obj.usedLessons=parseInt((document.getElementById('F_USED')||{}).value)||0;
@@ -347,14 +350,19 @@ function delQuitStu(id){
   G.sid=null;G.view='quit';G.curNotes={};R();
 }
 
-function setFday(d){
-  G.fday=d;
+/* ★ 요일 토글 - 다중 선택 */
+function toggleFday(d){
+  var idx=G.fdays.indexOf(d);
+  if(idx>=0){if(G.fdays.length>1)G.fdays.splice(idx,1);}
+  else{G.fdays.push(d);}
+  /* 버튼 스타일 업데이트 */
   var i,b,dc,on;
   for(i=0;i<DAYS.length;i++){
     b=document.getElementById('FBTN_'+DAYS[i]);if(!b)continue;
-    dc=DC[DAYS[i]];on=(DAYS[i]===d);
+    dc=DC[DAYS[i]];on=(G.fdays.indexOf(DAYS[i])>=0);
     b.style.cssText=(on?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer';
   }
+  var lbl=document.getElementById('FDAYS_LABEL');if(lbl)lbl.textContent=G.fdays.join(', ');
 }
 function doLogin(){
   var em=(document.getElementById('EM_IN')||{}).value||'',pw=(document.getElementById('PW_IN')||{}).value||'';
@@ -378,8 +386,8 @@ function goBack(){
   G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();
 }
 function selDay(d){G.selDay=d;R();}
-function openAdd(){G.esid=null;G.fday='월';G.form=true;R();}
-function openEdit(id){var s=stuById(id);if(!s)return;G.esid=id;G.fday=s.day||'월';G.form=true;R();}
+function openAdd(){G.esid=null;G.fdays=['월'];G.form=true;R();}
+function openEdit(id){var s=stuById(id);if(!s)return;G.esid=id;G.fdays=s.days?s.days.split(','):[s.day||'월'];G.form=true;R();}
 function closeForm(){G.form=false;G.esid=null;R();}
 function doSearch(){
   var el=document.getElementById('SRCH_INPUT');if(!el)return;
@@ -490,13 +498,20 @@ function ringHtml(s){
   return '<div class="ring-wrap"><div style="width:48px;height:48px;border-radius:50%;background:conic-gradient('+c+' '+p+'%,#E5E7EB '+p+'%);display:flex;align-items:center;justify-content:center"><div style="width:35px;height:35px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:13px;font-weight:800;color:'+c+';line-height:1">'+r+'</span><span style="font-size:7px;color:#9CA3AF;line-height:1">남음</span></div></div><span style="font-size:9px;color:#6B7280;margin-top:2px">'+(+s.usedLessons||0)+'/'+(+s.totalLessons||0)+'</span></div>';
 }
 function stuCardHtml(s){
-  var dc=DC[s.day]||DC['월'],r=rem(s);
+  /* days 배열 파싱 (하위호환: days 없으면 day 사용) */
+  var dayList=s.days?s.days.split(','):[s.day||'월'];
+  var dc=DC[dayList[0]]||DC['월'],r=rem(s);
   var bStyle=r===1?'border:2px solid #FED7AA':r<=0?'border:1.5px solid #FECACA;opacity:.88':'border:1.5px solid #E5E7EB';
   var lvs=LEVEL_STYLE[s.level||'기타']||LEVEL_STYLE['기타'];
   var lvBadge=s.level&&s.level!=='기타'?'<span style="font-size:10px;color:'+lvs.tx+';background:'+lvs.bg+';border:1px solid '+lvs.bd+';border-radius:5px;padding:1px 6px;font-weight:700">'+lvs.icon+' '+s.level+'</span>':'';
+  /* 요일 뱃지 (여러개) */
+  var dayBadges='',di,dd,ddc;
+  for(di=0;di<dayList.length;di++){dd=dayList[di];ddc=DC[dd]||DC['월'];dayBadges+='<span style="font-size:10px;font-weight:800;color:'+ddc.tx+';background:'+ddc.bg+';border:1px solid '+ddc.bd+';border-radius:5px;padding:1px 5px">'+dd+'</span>';}
   return '<button class="sc" style="'+bStyle+'" onclick="goStu(\''+s.id+'\')">'
-    +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid '+dc.bd+';background:'+dc.bg+';flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:12px;font-weight:800;color:'+dc.tx+'">'+s.day+'</span><span style="font-size:10px;color:'+dc.tx+';opacity:.8">'+s.time+'</span></div>'
-    +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+lvBadge+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'+(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
+    +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid '+dc.bd+';background:'+dc.bg+';flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:800;color:'+dc.tx+'">'+(dayList.length>1?dayList.join('·'):dayList[0])+'</span><span style="font-size:10px;color:'+dc.tx+';opacity:.8">'+s.time+'</span></div>'
+    +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+lvBadge+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'
+    +(dayList.length>1?'<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">'+dayBadges+'<span style="font-size:10px;color:#9CA3AF">'+s.time+'</span></div>':'')
+    +(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
     +ringHtml(s)+'</button>';
 }
 function quitCardHtml(s){
@@ -571,21 +586,31 @@ var LEVEL_STYLE={
 };
 
 function vSchedule(){
-  var ss=allStu(),ds=[],i,s,cnt,d,dc,on,h='';
-  for(i=0;i<ss.length;i++){if(ss[i].day===G.selDay)ds.push(ss[i]);}
-  /* 등급순 → 시간순 정렬 */
+  var ss=allStu(),ds=[],i,s,cnt,d,dc,on,h='',dayList;
+  /* ★ 선택된 요일에 포함된 학생 모두 표시 (days 배열 지원) */
+  for(i=0;i<ss.length;i++){
+    dayList=ss[i].days?ss[i].days.split(','):[ss[i].day||'월'];
+    if(dayList.indexOf(G.selDay)>=0)ds.push(ss[i]);
+  }
   ds.sort(function(a,b){
     var la=LEVEL_ORDER[a.level||'기타']||3,lb=LEVEL_ORDER[b.level||'기타']||3;
     return la!==lb?la-lb:a.time.localeCompare(b.time);
   });
   h+='<div class="dtabs">';
-  for(i=0;i<DAYS.length;i++){d=DAYS[i];cnt=0;for(var j=0;j<ss.length;j++){if(ss[j].day===d)cnt++;}dc=DC[d];on=(G.selDay===d);h+='<button class="dtab" onclick="selDay(\''+d+'\')" style="border-color:'+(on?dc.bd:'#E5E7EB')+';background:'+(on?dc.bg:'#fff')+';color:'+(on?dc.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';}
+  for(i=0;i<DAYS.length;i++){
+    d=DAYS[i];cnt=0;
+    for(var j=0;j<ss.length;j++){
+      var dl=ss[j].days?ss[j].days.split(','):[ss[j].day||'월'];
+      if(dl.indexOf(d)>=0)cnt++;
+    }
+    dc=DC[d];on=(G.selDay===d);
+    h+='<button class="dtab" onclick="selDay(\''+d+'\')" style="border-color:'+(on?dc.bd:'#E5E7EB')+';background:'+(on?dc.bg:'#fff')+';color:'+(on?dc.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';
+  }
   h+='</div>';
   if(!ds.length){
     h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
     return h;
   }
-  /* 등급별 그룹 헤더와 함께 출력 */
   var LEVELS=['선수','상급','중급','기타'];
   var groups={},lv,ls,k;
   for(k=0;k<LEVELS.length;k++)groups[LEVELS[k]]=[];
@@ -634,7 +659,8 @@ function vDetail(){
   var s=stuById(G.sid);
   if(!s)return '<div class="empty"><div style="font-size:30px">😕</div><p style="font-size:13px">학생 정보를 찾을 수 없습니다</p></div>';
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100);
-  var dc=DC[s.day]||DC['월'],c=rc(r);
+  var dayList=s.days?s.days.split(','):[s.day||'월'];
+  var dc=DC[dayList[0]]||DC['월'],c=rc(r);
   var isQuit=!!G.quitData[G.sid];
   var ns=noteArr(G.curNotes),rev=[],i,n,h='';
   for(i=ns.length-1;i>=0;i--)rev.push(ns[i]);
@@ -651,7 +677,9 @@ function vDetail(){
     +(G.admin&&isQuit?'<div style="display:flex;gap:6px"><button class="bd" onclick="delQuitStu(\''+s.id+'\')">삭제</button></div>':'')
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:11px;margin-top:13px;flex-wrap:wrap">'
-    +'<div style="background:'+dc.bg+';border:2px solid '+dc.bd+';border-radius:10px;padding:5px 12px"><span style="font-weight:800;color:'+dc.tx+';font-size:14px">'+s.day+'요일 '+s.time+'</span></div>'
+    +'<div style="background:'+dc.bg+';border:2px solid '+dc.bd+';border-radius:10px;padding:5px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">'
+    +(function(){var h='',di,dd,ddc;for(di=0;di<dayList.length;di++){dd=dayList[di];ddc=DC[dd]||DC['월'];h+='<span style="font-weight:800;color:'+ddc.tx+';font-size:13px;background:'+ddc.bg+';border:1px solid '+ddc.bd+';border-radius:6px;padding:1px 7px">'+dd+'</span>';}return h;})()
+    +'<span style="font-weight:700;color:'+dc.tx+';font-size:13px">'+s.time+'</span></div>'
     +ringHtml(s)
     +'<div style="flex:1;min-width:100px"><div style="font-size:11px;color:#6B7280;margin-bottom:3px">수업 진행률</div><div class="pbar"><div class="pfill" style="width:'+p+'%;background:'+c+'"></div></div><div style="font-size:10px;color:#9CA3AF;margin-top:3px">'+(+s.usedLessons||0)+'회 완료 / 총 '+(+s.totalLessons||0)+'회 ('+r+'회 남음)</div></div></div>'
     +(r===1?'<div style="margin-top:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;font-size:13px;color:#F97316;font-weight:700">⚠️ 수업이 1회 남았습니다! 재등록을 안내해 주세요.</div>':'')
@@ -687,16 +715,16 @@ function vDetail(){
 }
 
 function vForm(){
-  var s=G.esid?stuById(G.esid):null,sd=G.fday||(s?s.day:'월');
-  var i,d,dc,on,h='';
+  var s=G.esid?stuById(G.esid):null;
+  var i,d,dc,h='';
   h='<div class="modal" onclick="if(event.target===this)closeForm()"><div class="modal-c"><div style="width:38px;height:4px;background:#E5E7EB;border-radius:4px;margin:0 auto 18px"></div><div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:16px">'+(s?'학생 정보 수정':'새 학생 등록')+'</div>';
   h+='<label class="lbl">이름 *</label><input class="fi" type="text" id="F_NAME" value="'+xe(s?s.name||'':'')+'" placeholder="학생 이름" style="margin-bottom:12px">';
   h+='<label class="lbl">연락처</label><input class="fi" type="tel" id="F_CONTACT" value="'+xe(s?s.contact||'':'')+'" placeholder="010-0000-0000" style="margin-bottom:12px">';
   h+='<label class="lbl">생년월일</label><input class="fi" type="text" id="F_BIRTH" value="'+xe(s?s.birthdate||'':'')+'" placeholder="예: 2015-03-15" style="margin-bottom:12px">';
-  h+='<label class="lbl">수강 요일</label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">';
-  for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];on=(sd===d);h+='<button id="FBTN_'+d+'" onclick="setFday(\''+d+'\')" style="'+(on?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
-  h+='</div><label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
-  for(i=0;i<TIMES.length;i++)h+='<option value="'+TIMES[i]+'"'+(TIMES[i]===(s?s.time:'15:00')?' selected':'')+'>'+TIMES[i]+'</option>';
+  h+='<label class="lbl">수강 요일 <span style="font-size:11px;color:#6B7280;font-weight:400">(여러 요일 선택 가능)</span></label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">';
+  for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];var on2=(G.fdays.indexOf(d)>=0);h+='<button id="FBTN_'+d+'" onclick="toggleFday(\''+d+'\')" style="'+(on2?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
+  h+='</div><div style="font-size:11px;color:#6B7280;margin-bottom:12px">선택된 요일: <b id="FDAYS_LABEL" style="color:#4338CA">'+G.fdays.join(', ')+'</b></div>';
+  h+='<label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
   h+='</select>';
   /* 등급 선택 */
   var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst,lvon;

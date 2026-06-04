@@ -725,6 +725,7 @@ function vForm(){
   for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];var on2=(G.fdays.indexOf(d)>=0);h+='<button id="FBTN_'+d+'" onclick="toggleFday(\''+d+'\')" style="'+(on2?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
   h+='</div><div style="font-size:11px;color:#6B7280;margin-bottom:12px">선택된 요일: <b id="FDAYS_LABEL" style="color:#4338CA">'+G.fdays.join(', ')+'</b></div>';
   h+='<label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
+  for(i=0;i<TIMES.length;i++)h+='<option value="'+TIMES[i]+'"'+(TIMES[i]===(s?s.time:'15:00')?' selected':'')+'>'+TIMES[i]+'</option>';
   h+='</select>';
   /* 등급 선택 */
   var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst,lvon;

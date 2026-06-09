@@ -134,7 +134,7 @@ function noteArr(obj){
     for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}
     copy.id=copy.id||k;r.push(copy);
   }
-  return r.sort(function(a,b){return(+a.lessonNum||0)-(+b.lessonNum||0);});
+  return r.sort(function(a,b){var ta=(+a.term||1),tb=(+b.term||1);return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
 }
 function allStu(){return objArr(G.stuData);}
 function allQuit(){return objArr(G.quitData);}
@@ -267,33 +267,45 @@ function closeAddLesson(){
   G.addLessonSid=null;
   R();
 }
-/* ★ 실제 회차 추가 (횟수 리셋 후 추가) */
+/* ★ 새 기수로 수업 추가 - 회차 1부터 새로 시작 */
 function doAddLesson(sid){
   var addEl=document.getElementById('ADD_LESSON_CNT');
   var add=parseInt(addEl?addEl.value:10)||10;
   if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  /* 현재 진행한 횟수는 유지, 총 횟수만 늘림 */
-  var newTotal=(+s.totalLessons||0)+add;
-  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+  /* ★ 기수 증가 + 횟수 1부터 새로 시작 */
+  var newTerm=(+s.term||1)+1;
+  db.ref('students/'+sid).update({
+    totalLessons:add,
+    usedLessons:0,
+    term:newTerm,
+    notified:false
+  });
   G.showAddLesson=false;
   G.addLessonSid=null;
-  showToast('✅ '+add+'회 추가되었습니다! (총 '+newTotal+'회)');
+  showToast('✅ '+newTerm+'기 시작! '+add+'회 수업이 새로 등록되었습니다.');
 }
 
 function addLesson(sid){
   var s=stuById(sid);if(!s)return;
-  /* ★ 남은 수업 0이면 추가 모달로 */
   if(rem(s)<=0){openAddLesson(sid);return;}
-  var nu=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
+  /* ★ 현재 기수의 실제 수업 횟수를 노트에서 계산 */
+  var term=+s.term||1;
+  var existNotes=G.curNotes||{};
+  var termCount=0,keys=Object.keys(existNotes),i,n;
+  for(i=0;i<keys.length;i++){
+    n=existNotes[keys[i]];
+    if((+n.term||1)===term)termCount++;
+  }
+  var nu=termCount+1; /* 현재 기수 내 다음 회차 */
+  var globalUsed=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
   var nid=uid();
-  var upd={usedLessons:nu};
-  var nk='notes/'+nid;
-  upd[nk]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu};
+  var upd={usedLessons:globalUsed};
+  upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
   db.ref('students/'+sid).update(upd);
-  var r=Math.max(0,(+s.totalLessons||0)-nu);
+  var r=Math.max(0,(+s.totalLessons||0)-globalUsed);
   if(r===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
-  if(r===0)showToast('✅ '+s.name+' 학생 모든 수업 완료! 재등록을 안내하거나 수업을 추가하세요.');
+  if(r===0)showToast('✅ '+s.name+' 모든 수업 완료! 수업 추가 또는 퇴원 처리 하세요.');
 }
 
 function saveNote(sid,nid){
@@ -306,8 +318,11 @@ function delNote(sid,nid){
   if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
   var s=stuById(sid);
   var refPath=G.stuData[sid]?'students':'quit_students';
-  db.ref(refPath+'/'+sid+'/notes/'+nid).remove();
-  db.ref(refPath+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
+  /* ★ 노트 삭제 후 usedLessons 1 감소만 처리 (lessonNum 재계산 없음) */
+  db.ref(refPath+'/'+sid+'/notes/'+nid).remove()
+    .then(function(){
+      db.ref(refPath+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
+    });
 }
 
 /* ★ 그만둔 학생으로 이동 */
@@ -700,7 +715,18 @@ function vDetail(){
   else{
     for(i=0;i<rev.length;i++){
       n=rev[i];
-      h+='<div class="nc"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>'
+      /* 기수 구분선 */
+      var termLabel='';
+      /* rev는 최신→오래된 순이므로 다음 항목(i+1)과 기수 비교 */
+      var curTermN=+n.term||1;
+      var nextTermN=(i+1<rev.length)?(+rev[i+1].term||1):0;
+      if(i===0){
+        termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:16px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:14px">'+curTermN+'기</span>'+(curTermN>1?'<span style="font-size:11px;color:#6B7280">현재 진행 중</span>':'')+' </div>';
+      } else if(curTermN!==nextTermN&&nextTermN>0){
+        termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:16px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:14px">'+curTermN+'기</span>'+(curTermN>1?'<span style="font-size:11px;color:#6B7280">1회부터 시작</span>':'')+' </div>';
+      }
+      h+=termLabel;
+      h+='<div class="nc"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(curTermN>1?curTermN+'기 ':'')+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>'
         +'<div style="display:flex;gap:5px">'
         +(!isQuit?'<button onclick="G.enid=\''+n.id+'\';R()" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button>':'')
         +(G.admin?'<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(\''+s.id+'\',\''+n.id+'\')">삭제</button>':'')

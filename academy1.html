@@ -15,7 +15,6 @@ body{font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif
 button,input,select,textarea{font-family:inherit}
 .hdr{background:linear-gradient(135deg,#1E1B4B,#4338CA,#6D28D9);padding:14px 16px;position:sticky;top:0;z-index:50;color:#fff;box-shadow:0 4px 16px rgba(67,56,202,.3)}
 .main{padding:14px 14px 90px}
-.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
 .bp{background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:12px;padding:12px 20px;font-weight:700;font-size:15px;cursor:pointer;width:100%}
 .bp:disabled{opacity:.5;cursor:not-allowed}
 .bs{background:#F3F4F6;color:#374151;border:none;border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px;cursor:pointer}
@@ -24,7 +23,7 @@ button,input,select,textarea{font-family:inherit}
 .fi{width:100%;padding:11px 14px;border-radius:11px;border:2px solid #E5E7EB;font-size:14px;outline:none;background:#fff;transition:border-color .2s}
 .fi:focus{border-color:#6366F1}
 .tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
-.tab{flex:1;min-width:60px;padding:9px 6px;border-radius:11px;border:2px solid #E5E7EB;background:#fff;color:#6B7280;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap}
+.tab{flex:1;min-width:60px;padding:9px 6px;border-radius:11px;border:2px solid #E5E7EB;background:#fff;color:#6B7280;font-weight:600;font-size:12px;cursor:pointer}
 .tab.on{border-color:transparent;background:#6366F1;color:#fff;font-weight:800}
 .tab.quit-tab{border-color:#FCD34D;color:#92400E;background:#FFFBEB}
 .tab.quit-tab.on{background:linear-gradient(135deg,#F59E0B,#D97706);border-color:transparent;color:#fff}
@@ -54,17 +53,17 @@ button,input,select,textarea{font-family:inherit}
 .hstat{flex:1;background:rgba(255,255,255,.13);border-radius:10px;padding:7px;text-align:center}
 .errmsg{background:#FEF2F2;color:#DC2626;border-radius:9px;padding:10px 13px;font-size:13px;margin-top:8px;border:1px solid #FECACA}
 .sec-ttl{font-size:14px;font-weight:700;color:#374151;margin-bottom:9px}
-.loading{text-align:center;padding:32px;color:#9CA3AF;font-size:13px}
-/* 다운로드 버튼 */
-.dl-btn{background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.dl-btn{background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;justify-content:center}
 .dl-panel{background:#fff;border-radius:14px;border:2px solid #D1FAE5;margin-bottom:12px;overflow:hidden}
 .dl-panel-hd{padding:11px 14px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-bottom:1px solid #D1FAE5;display:flex;align-items:center;gap:7px}
-/* 그만둔 학생 */
-.quit-card{background:#FFFBEB;border-radius:14px;padding:13px;border:1.5px solid #FCD34D;cursor:pointer;display:flex;align-items:center;gap:11px;margin-bottom:8px;text-align:left;box-shadow:0 2px 8px rgba(0,0,0,.04);opacity:.85}
+.quit-card{background:#FFFBEB;border-radius:14px;padding:13px;border:1.5px solid #FCD34D;display:flex;align-items:center;gap:11px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .restore-btn{background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer}
-/* 회차 추가 모달 */
 .lesson-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:250;backdrop-filter:blur(4px);padding:20px}
 .lesson-modal-c{background:#fff;border-radius:22px;width:100%;max-width:400px;padding:24px 20px}
+/* 배정화면 */
+.assign-wrap{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.assign-stu{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:2px solid #E5E7EB;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.assign-stu.on{background:#EEF2FF;border-color:#818CF8}
 </style>
 </head>
 <body>
@@ -73,79 +72,70 @@ button,input,select,textarea{font-family:inherit}
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <div style="flex:1;position:relative">
       <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:17px;pointer-events:none">🔍</span>
-      <input id="SRCH_INPUT" type="text" lang="ko" autocomplete="off" placeholder="이름 또는 초성(ㄱ ㄴ ㄷ) 입력 후 검색" style="width:100%;padding:12px 12px 12px 42px;border-radius:12px;border:2px solid #6366F1;font-size:14px;outline:none;background:#fff">
+      <input id="SRCH_INPUT" type="text" lang="ko" autocomplete="off" placeholder="이름 또는 초성 검색" style="width:100%;padding:12px 12px 12px 42px;border-radius:12px;border:2px solid #6366F1;font-size:14px;outline:none;background:#fff">
     </div>
-    <button onclick="doSearch()" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:12px;padding:0 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">검색</button>
+    <button id="SRCH_BTN" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:12px;padding:0 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">검색</button>
   </div>
   <div id="SRCH_RES"></div>
 </div>
-
 <script>
-/* ══ Firebase 설정 ══ */
-var FB1={apiKey:"AIzaSyDCNm3RzgKOsVsG864yopYaY9jnOycDVIc",authDomain:"project-402538a5-a8b1-40a1-a97.firebaseapp.com",databaseURL:"https://project-402538a5-a8b1-40a1-a97-default-rtdb.firebaseio.com",projectId:"project-402538a5-a8b1-40a1-a97",storageBucket:"project-402538a5-a8b1-40a1-a97.firebasestorage.app",messagingSenderId:"414728841659",appId:"1:414728841659:web:0d883c5ce39b0ab679fc9e"};
+var FBCFG={apiKey:"AIzaSyDCNm3RzgKOsVsG864yopYaY9jnOycDVIc",authDomain:"project-402538a5-a8b1-40a1-a97.firebaseapp.com",databaseURL:"https://project-402538a5-a8b1-40a1-a97-default-rtdb.firebaseio.com",projectId:"project-402538a5-a8b1-40a1-a97",storageBucket:"project-402538a5-a8b1-40a1-a97.firebasestorage.app",messagingSenderId:"414728841659",appId:"1:414728841659:web:0d883c5ce39b0ab679fc9e"};
 var ADMIN_EMAIL="noella7154@gmail.com";
 var ACAD_NAME="생각키움연구소";
 
 var DAYS=['월','화','수','목','금','토','일'];
-var DC={'월':{bg:'#EEF2FF',tx:'#4338CA',bd:'#818CF8'},'화':{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C'},'수':{bg:'#F0FDF4',tx:'#15803D',bd:'#4ADE80'},'목':{bg:'#FDF4FF',tx:'#7E22CE',bd:'#C084FC'},'금':{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185'},'토':{bg:'#F0F9FF',tx:'#0369A1',bd:'#38BDF8'},'일':{bg:'#FEF9C3',tx:'#854D0E',bd:'#FACC15'}};
+var DC={월:{bg:'#EEF2FF',tx:'#4338CA',bd:'#818CF8'},화:{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C'},수:{bg:'#F0FDF4',tx:'#15803D',bd:'#4ADE80'},목:{bg:'#FDF4FF',tx:'#7E22CE',bd:'#C084FC'},금:{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185'},토:{bg:'#F0F9FF',tx:'#0369A1',bd:'#38BDF8'},일:{bg:'#FEF9C3',tx:'#854D0E',bd:'#FACC15'}};
 var TIMES=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+var LO={선수:0,상급:1,중급:2,기타:3};
+var LS={선수:{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185',icon:'🥇'},상급:{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C',icon:'🥈'},중급:{bg:'#ECFDF5',tx:'#065F46',bd:'#34D399',icon:'🥉'},기타:{bg:'#F3F4F6',tx:'#374151',bd:'#9CA3AF',icon:'📚'}};
 
-/* ══ 앱 상태 ══ */
-var G={user:null,admin:false,
-  stuData:{},
-  quitData:{},   /* 그만둔 학생 */
-  curNotes:{},
-  assignData:{},  /* 담당배정 데이터 */
-  view:'sch',prevView:'sch',selDay:'월',sid:null,
-  notif:null,form:false,esid:null,fdays:['월'],enid:null,
-  showAddLesson:false,  /* 회차 추가 모달 */
-  addLessonSid:null,
-  showQuit:false,
-  assignView:false};  /* 담당배정 화면 */
+/* ══ 상태 ══ */
+var G={
+  user:null, admin:false,
+  stuData:{}, quitData:{}, curNotes:{}, assignData:{},
+  view:'sch', prevView:'sch', selDay:'월', sid:null,
+  notif:null, form:false, esid:null, fdays:['월'], enid:null,
+  showAddLesson:false, addLessonSid:null,
+  assignView:false, assignTeacher:null  /* 배정 화면용 */
+};
 var _saving=false,_ime=false,_pend=false,_noteListener=null;
 
-/* ══ 초성 검색 ══ */
+/* 초성 */
 var CSARR='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
 function toCS(s){var r='',i,c;for(i=0;i<s.length;i++){c=s.charCodeAt(i);r+=(c>=0xAC00&&c<=0xD7A3)?CSARR[Math.floor((c-0xAC00)/588)]:s[i];}return r;}
 function isCS(s){var i,c;if(!s)return false;for(i=0;i<s.length;i++){c=s.charCodeAt(i);if(!(c>=0x3131&&c<=0x314E))return false;}return s.length>0;}
 
-/* ══ 유틸 ══ */
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
-function xe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function rem(s){return Math.max(0,(+s.totalLessons||0)-(+s.usedLessons||0))}
-function rc(r){return r<=0?'#EF4444':r===1?'#F97316':r<=3?'#F59E0B':'#10B981'}
+/* 유틸 */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function xe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function rem(s){return Math.max(0,(+s.totalLessons||0)-(+s.usedLessons||0));}
+function rc(r){return r<=0?'#EF4444':r===1?'#F97316':r<=3?'#F59E0B':'#10B981';}
+function eKey(email){return email.replace(/\./g,'_DOT_').replace(/@/g,'_AT_');}
 
 function objArr(obj){
   var r=[],keys,i,k,s,copy,p;
   if(!obj)return r;
   keys=Object.keys(obj);
-  for(i=0;i<keys.length;i++){
-    k=keys[i];s=obj[k];copy={};
-    for(p in s){if(Object.prototype.hasOwnProperty.call(s,p))copy[p]=s[p];}
-    copy.id=copy.id||k;copy.totalLessons=+copy.totalLessons||0;copy.usedLessons=+copy.usedLessons||0;
-    r.push(copy);
-  }
+  for(i=0;i<keys.length;i++){k=keys[i];s=obj[k];copy={};for(p in s){if(Object.prototype.hasOwnProperty.call(s,p))copy[p]=s[p];}copy.id=copy.id||k;copy.totalLessons=+copy.totalLessons||0;copy.usedLessons=+copy.usedLessons||0;r.push(copy);}
   return r;
 }
 function noteArr(obj){
   var r=[],keys,i,k,n,copy,p;
   if(!obj)return r;
   keys=Object.keys(obj);
-  for(i=0;i<keys.length;i++){
-    k=keys[i];n=obj[k];copy={};
-    for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}
-    copy.id=copy.id||k;r.push(copy);
-  }
-  return r.sort(function(a,b){var ta=(+a.term||1),tb=(+b.term||1);return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
+  for(i=0;i<keys.length;i++){k=keys[i];n=obj[k];copy={};for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}copy.id=copy.id||k;r.push(copy);}
+  return r.sort(function(a,b){var ta=+a.term||1,tb=+b.term||1;return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
 }
+
+/* 강사 필터링: 원장은 전체, 강사는 배정된 학생만 */
 function allStu(){
   var all=objArr(G.stuData);
   if(G.admin)return all;
-  /* 강사는 배정된 학생만 */
-  var email=G.user?G.user.email:'';
-  var assigned=G.assignData[email.replace(/\./g,'_').replace(/@/g,'__')]||{};
-  if(!Object.keys(assigned).length)return all; /* 배정 없으면 전체 */
-  return all.filter(function(s){return !!assigned[s.id];});
+  var key=eKey(G.user.email);
+  var assigned=G.assignData[key]||{};
+  var ids=Object.keys(assigned);
+  if(!ids.length)return []; /* 배정 없으면 빈 목록 */
+  return all.filter(function(s){return assigned[s.id]===true;});
 }
 function allQuit(){return objArr(G.quitData);}
 function stuById(id){
@@ -155,81 +145,51 @@ function stuById(id){
   c.id=c.id||id;c.totalLessons=+c.totalLessons||0;c.usedLessons=+c.usedLessons||0;return c;
 }
 
-/* ══ Firebase ══ */
-firebase.initializeApp(FB1);
+firebase.initializeApp(FBCFG);
 var auth=firebase.auth(),db=firebase.database();
 
 document.addEventListener('compositionstart',function(){_ime=true;});
 document.addEventListener('compositionend',function(){_ime=false;if(_pend){_pend=false;R();}});
+document.getElementById('SRCH_BTN').addEventListener('click',doSearch);
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&e.target.id==='SRCH_INPUT'){e.preventDefault();doSearch();}
   if(e.key==='Enter'&&e.target.id==='PW_IN')doLogin();
 });
 
-/* ══ 리스너: 재학생 ══ */
 function startListen(){
   db.ref('students').on('value',function(snap){
     var data=snap.val()||{},keys,i,k,s,basic,p;
-    G.stuData={};
-    keys=Object.keys(data);
+    G.stuData={};keys=Object.keys(data);
     for(i=0;i<keys.length;i++){
       k=keys[i];s=data[k];basic={};
       for(p in s){if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes')basic[p]=s[p];}
-      basic.id=basic.id||k;
-      basic.totalLessons=+basic.totalLessons||0;
-      basic.usedLessons=+basic.usedLessons||0;
-      if(G.admin&&rem(basic)<=0&&!basic.notified){
-        showToast(basic.name+' 학생의 수업이 모두 완료되었습니다!');
-        db.ref('students/'+k+'/notified').set(true);
-      }
+      basic.id=basic.id||k;basic.totalLessons=+basic.totalLessons||0;basic.usedLessons=+basic.usedLessons||0;
+      if(G.admin&&rem(basic)<=0&&!basic.notified){showToast(basic.name+' 학생 수업 완료!');db.ref('students/'+k+'/notified').set(true);}
       G.stuData[k]=basic;
     }
     safeR();
   });
-  /* 담당배정 리스너 */
-  db.ref('assign').on('value',function(snap){
-    G.assignData=snap.val()||{};
-    if(!G.assignView)safeR(); /* 배정화면 열려있을 땐 갱신 안함 */
-  });
-  /* 그만둔 학생 리스너 */
   db.ref('quit_students').on('value',function(snap){
     var data=snap.val()||{},keys,i,k,s,basic,p;
-    G.quitData={};
-    keys=Object.keys(data);
-    for(i=0;i<keys.length;i++){
-      k=keys[i];s=data[k];basic={};
-      for(p in s){if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes')basic[p]=s[p];}
-      basic.id=basic.id||k;
-      basic.totalLessons=+basic.totalLessons||0;
-      basic.usedLessons=+basic.usedLessons||0;
-      G.quitData[k]=basic;
-    }
+    G.quitData={};keys=Object.keys(data);
+    for(i=0;i<keys.length;i++){k=keys[i];s=data[k];basic={};for(p in s){if(Object.prototype.hasOwnProperty.call(s,p)&&p!=='notes')basic[p]=s[p];}basic.id=basic.id||k;basic.totalLessons=+basic.totalLessons||0;basic.usedLessons=+basic.usedLessons||0;G.quitData[k]=basic;}
+    safeR();
+  });
+  db.ref('assign').on('value',function(snap){
+    G.assignData=snap.val()||{};
     safeR();
   });
 }
 
-/* ══ 노트 리스너 ══ */
 function loadNotes(sid){
-  if(_noteListener){
-    var prevRef=G.stuData[_noteListener]?'students':'quit_students';
-    db.ref(prevRef+'/'+_noteListener+'/notes').off();
-    _noteListener=null;
-  }
-  G.curNotes={};
-  if(!sid)return;
+  if(_noteListener){var pr=G.stuData[_noteListener]?'students':'quit_students';db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;}
+  G.curNotes={};if(!sid)return;
   _noteListener=sid;
-  var refPath=G.stuData[sid]?'students':'quit_students';
-  db.ref(refPath+'/'+sid+'/notes').on('value',function(snap){
-    G.curNotes=snap.val()||{};
-    if(G.view==='det'&&G.sid===sid)R();
-  });
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes').on('value',function(snap){G.curNotes=snap.val()||{};if(G.view==='det'&&G.sid===sid)R();});
 }
 
-function safeR(){
-  var si=document.getElementById('SRCH_INPUT');
-  if(_ime||(si&&document.activeElement===si)){_pend=true;return;}
-  R();
-}
+function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
 
 /* ══ CRUD ══ */
 function saveStu(){
@@ -237,133 +197,43 @@ function saveStu(){
   var ne=document.getElementById('F_NAME');
   if(!ne||!ne.value.trim()){alert('이름을 입력해 주세요.');return;}
   _saving=true;
-
-  /* ★ 수정 시 기존 id 사용, 신규 시에만 새 uid 생성 */
-  var id=G.esid||uid();
-  var ex=G.stuData[id]||{};
-  var obj={},p;
+  var id=G.esid||uid(),ex=G.stuData[id]||{},obj={},p;
   for(p in ex){if(Object.prototype.hasOwnProperty.call(ex,p))obj[p]=ex[p];}
-  obj.id=id;
-  obj.name=ne.value.trim();
+  obj.id=id;obj.name=ne.value.trim();
   obj.contact=(document.getElementById('F_CONTACT')||{}).value||'';
   obj.birthdate=(document.getElementById('F_BIRTH')||{}).value||'';
-  /* ★ 다중 요일: days 배열 저장, day는 첫번째 요일(하위호환) */
-  var selDays=G.fdays.length?G.fdays:['월'];
-  obj.days=selDays.join(',');
-  obj.day=selDays[0];
+  var sd=G.fdays.length?G.fdays:['월'];obj.days=sd.join(',');obj.day=sd[0];
   obj.time=(document.getElementById('F_TIME')||{}).value||'15:00';
   obj.totalLessons=parseInt((document.getElementById('F_TOTAL')||{}).value)||10;
   obj.usedLessons=parseInt((document.getElementById('F_USED')||{}).value)||0;
   obj.level=(document.getElementById('F_LEVEL')||{}).value||'기타';
-  obj.notified=ex.notified||false;
-  obj.createdAt=ex.createdAt||new Date().toISOString();
-
-  /* ★ update 사용 → 기존 데이터(노트 포함) 유지 */
+  obj.notified=ex.notified||false;obj.createdAt=ex.createdAt||new Date().toISOString();
   db.ref('students/'+id).update(obj)
     .then(function(){_saving=false;G.form=false;G.esid=null;showToast('✅ 저장되었습니다.');})
-    .catch(function(){_saving=false;alert('저장 오류가 발생했습니다.');});
+    .catch(function(){_saving=false;alert('저장 오류');});
 }
-
 function delStu(id){
   if(!confirm('정말 삭제하시겠습니까?'))return;
   if(_noteListener===id){db.ref('students/'+id+'/notes').off();_noteListener=null;}
-  db.ref('students/'+id).remove();
-  G.sid=null;G.view=G.prevView||'sch';R();
+  db.ref('students/'+id).remove();G.sid=null;G.view=G.prevView||'sch';R();
 }
-
-/* ★ 수업 종료 후 회차 추가 모달 열기 */
-function openAddLesson(sid){
-  G.showAddLesson=true;
-  G.addLessonSid=sid;
-  R();
-}
-function closeAddLesson(){
-  G.showAddLesson=false;
-  G.addLessonSid=null;
-  R();
-}
-/* ★ 새 기수로 수업 추가 - 회차 1부터 새로 시작 */
-function doAddLesson(sid){
-  var addEl=document.getElementById('ADD_LESSON_CNT');
-  var add=parseInt(addEl?addEl.value:10)||10;
-  if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
-  var s=stuById(sid);if(!s)return;
-  /* ★ 기수 증가 + 횟수 1부터 새로 시작 */
-  var newTerm=(+s.term||1)+1;
-  db.ref('students/'+sid).update({
-    totalLessons:add,
-    usedLessons:0,
-    term:newTerm,
-    notified:false
-  });
-  G.showAddLesson=false;
-  G.addLessonSid=null;
-  showToast('✅ '+newTerm+'기 시작! '+add+'회 수업이 새로 등록되었습니다.');
-}
-
-function addLesson(sid){
-  var s=stuById(sid);if(!s)return;
-  if(rem(s)<=0){openAddLesson(sid);return;}
-  /* ★ 현재 기수의 실제 수업 횟수를 노트에서 계산 */
-  var term=+s.term||1;
-  var existNotes=G.curNotes||{};
-  var termCount=0,keys=Object.keys(existNotes),i,n;
-  for(i=0;i<keys.length;i++){
-    n=existNotes[keys[i]];
-    if((+n.term||1)===term)termCount++;
-  }
-  var nu=termCount+1; /* 현재 기수 내 다음 회차 */
-  var globalUsed=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
-  var nid=uid();
-  var upd={usedLessons:globalUsed};
-  upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
-  db.ref('students/'+sid).update(upd);
-  var r=Math.max(0,(+s.totalLessons||0)-globalUsed);
-  if(r===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
-  if(r===0)showToast('✅ '+s.name+' 모든 수업 완료! 수업 추가 또는 퇴원 처리 하세요.');
-}
-
-function saveNote(sid,nid){
-  var ta=document.getElementById('NOTE_TA');if(!ta)return;
-  var refPath=G.stuData[sid]?'students':'quit_students';
-  db.ref(refPath+'/'+sid+'/notes/'+nid+'/content').set(ta.value);
-  G.enid=null;R();
-}
-function delNote(sid,nid){
-  if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
-  var s=stuById(sid);
-  var refPath=G.stuData[sid]?'students':'quit_students';
-  /* ★ 노트 삭제 후 usedLessons 1 감소만 처리 (lessonNum 재계산 없음) */
-  db.ref(refPath+'/'+sid+'/notes/'+nid).remove()
-    .then(function(){
-      db.ref(refPath+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
-    });
-}
-
-/* ★ 그만둔 학생으로 이동 */
 function moveToQuit(id){
-  if(!confirm('이 학생을 "그만둔 학생"으로 이동하시겠습니까?\n수업 기록은 보존됩니다.'))return;
-  var s=G.stuData[id];if(!s)return;
-  /* 전체 데이터(노트 포함) 읽어서 quit_students로 복사 */
+  if(!confirm('퇴원 처리하시겠습니까? 수업 기록은 보존됩니다.'))return;
   db.ref('students/'+id).once('value',function(snap){
     var data=snap.val();if(!data)return;
     data.quitDate=new Date().toISOString();
     db.ref('quit_students/'+id).set(data).then(function(){
       db.ref('students/'+id).remove();
       if(_noteListener===id){db.ref('students/'+id+'/notes').off();_noteListener=null;}
-      G.sid=null;G.view='quit';G.curNotes={};
-      showToast('📦 그만둔 학생으로 이동했습니다.');
+      G.sid=null;G.view='quit';G.curNotes={};showToast('📦 퇴원 처리되었습니다.');
     });
   });
 }
-
-/* ★ 그만둔 학생 복귀 */
 function restoreStudent(id){
-  if(!confirm('이 학생을 재학생으로 복귀시키겠습니까?'))return;
+  if(!confirm('재학생으로 복귀시키겠습니까?'))return;
   db.ref('quit_students/'+id).once('value',function(snap){
     var data=snap.val();if(!data)return;
-    delete data.quitDate;
-    data.notified=false;
+    delete data.quitDate;data.notified=false;
     db.ref('students/'+id).set(data).then(function(){
       db.ref('quit_students/'+id).remove();
       if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
@@ -371,58 +241,110 @@ function restoreStudent(id){
     });
   });
 }
-
-/* ★ 그만둔 학생 완전 삭제 */
 function delQuitStu(id){
-  if(!confirm('완전히 삭제하시겠습니까?\n(수업 기록 포함 모두 삭제됩니다)'))return;
+  if(!confirm('완전히 삭제하시겠습니까?'))return;
   if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
-  db.ref('quit_students/'+id).remove();
-  G.sid=null;G.view='quit';G.curNotes={};R();
+  db.ref('quit_students/'+id).remove();G.sid=null;G.view='quit';G.curNotes={};R();
+}
+function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
+function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
+function doAddLesson(sid){
+  var addEl=document.getElementById('ADD_LESSON_CNT');
+  var add=parseInt(addEl?addEl.value:10)||10;
+  if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
+  var s=stuById(sid);if(!s)return;
+  var newTerm=(+s.term||1)+1;
+  db.ref('students/'+sid).update({totalLessons:add,usedLessons:0,term:newTerm,notified:false});
+  G.showAddLesson=false;G.addLessonSid=null;
+  showToast('✅ '+newTerm+'기 시작! '+add+'회 등록되었습니다.');
+}
+function addLesson(sid){
+  var s=stuById(sid);if(!s)return;
+  if(rem(s)<=0){openAddLesson(sid);return;}
+  var term=+s.term||1;
+  var existNotes=G.curNotes||{},termCount=0,keys=Object.keys(existNotes),i,n;
+  for(i=0;i<keys.length;i++){n=existNotes[keys[i]];if((+n.term||1)===term)termCount++;}
+  var nu=termCount+1;
+  var globalUsed=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
+  var nid=uid(),upd={usedLessons:globalUsed};
+  upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
+  db.ref('students/'+sid).update(upd);
+  var r=Math.max(0,(+s.totalLessons||0)-globalUsed);
+  if(r===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
+  if(r===0)showToast('✅ '+s.name+' 모든 수업 완료!');
+}
+function saveNote(sid,nid){
+  var ta=document.getElementById('NOTE_TA');if(!ta)return;
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes/'+nid+'/content').set(ta.value);G.enid=null;R();
+}
+function delNote(sid,nid){
+  if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
+  var s=stuById(sid);
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes/'+nid).remove().then(function(){
+    db.ref(rp+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
+  });
 }
 
-/* ══ 통합 액션 핸들러 (data-action 방식) ══ */
-function doAction(e){
-  var el=e.currentTarget||e.target;
-  var action=el.dataset.action;
-  var id=el.dataset.id;
-  var val=el.dataset.val;
-  var email=el.dataset.email;
-  var nid=el.dataset.nid;
-  if(action==='goStu'){goStu(id);}
-  else if(action==='selDay'){selDay(val);}
-  else if(action==='goView'){goView(val);}
-  else if(action==='toggleFday'){toggleFday(val);}
-  else if(action==='openEdit'){openEdit(id);}
-  else if(action==='addLesson'){addLesson(id);}
-  else if(action==='doAddLesson'){doAddLesson(id);}
-  else if(action==='dlNotes'){downloadStudentNotes(id);}
-  else if(action==='delNote'){delNote(id,nid);}
-  else if(action==='editNote'){G.enid=nid;R();}
-  else if(action==='restoreStudent'){restoreStudent(id);}
-  else if(action==='delQuitStu'){delQuitStu(id);}
-  else if(action==='setFlevel'){setFlevel(val);}
-  else if(action==='assignAll'){assignAll(email);}
-  else if(action==='assignNone'){assignNone(email);}
-  else if(action==='toggleAssign'){toggleAssign(email,id);}
-  else if(action==='moveToQuit'){moveToQuit(id);}
-  else if(action==='delStu'){delStu(id);}
-  else if(action==='saveNote'){saveNote(id,nid);}
+/* ══ 담당배정 ══ */
+function openAssign(teacherEmail){G.assignView=true;G.assignTeacher=teacherEmail;R();}
+function closeAssign(){G.assignView=false;G.assignTeacher=null;R();}
+function toggleAssign(stuId){
+  var key=eKey(G.assignTeacher);
+  if(!G.assignData[key])G.assignData[key]={};
+  if(G.assignData[key][stuId]===true){
+    delete G.assignData[key][stuId];
+    db.ref('assign/'+key+'/'+stuId).remove();
+  } else {
+    G.assignData[key][stuId]=true;
+    db.ref('assign/'+key+'/'+stuId).set(true);
+  }
+  R(); /* 즉시 화면 갱신 */
+}
+function assignAll(){
+  var key=eKey(G.assignTeacher);
+  var all=objArr(G.stuData),upd={},i;
+  for(i=0;i<all.length;i++)upd[all[i].id]=true;
+  G.assignData[key]=upd;
+  db.ref('assign/'+key).set(upd);
+  R();showToast('✅ 전체 학생이 배정되었습니다.');
+}
+function assignNone(){
+  var key=eKey(G.assignTeacher);
+  G.assignData[key]={};
+  db.ref('assign/'+key).remove();
+  R();showToast('🗑️ 배정이 모두 해제되었습니다.');
+}
+function confirmAssign(){
+  G.assignView=false;G.assignTeacher=null;
+  showToast('✅ 배정이 저장되었습니다!');R();
 }
 
-/* ★ 요일 토글 - 다중 선택 */
+/* 요일 토글 */
 function toggleFday(d){
   var idx=G.fdays.indexOf(d);
   if(idx>=0){if(G.fdays.length>1)G.fdays.splice(idx,1);}
   else{G.fdays.push(d);}
-  /* 버튼 스타일 업데이트 */
   var i,b,dc,on;
   for(i=0;i<DAYS.length;i++){
     b=document.getElementById('FBTN_'+DAYS[i]);if(!b)continue;
-    dc=DC[DAYS[i]];on=(G.fdays.indexOf(DAYS[i])>=0);
+    dc=DC[DAYS[i]];on=G.fdays.indexOf(DAYS[i])>=0;
     b.style.cssText=(on?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer';
   }
   var lbl=document.getElementById('FDAYS_LABEL');if(lbl)lbl.textContent=G.fdays.join(', ');
 }
+function setFlevel(lv){
+  var fi=document.getElementById('F_LEVEL');if(fi)fi.value=lv;
+  var LVLIST=['선수','상급','중급','기타'],i,lvn,lvst,b;
+  for(i=0;i<LVLIST.length;i++){
+    lvn=LVLIST[i];lvst=LS[lvn];b=document.getElementById('FLVBTN_'+lvn);if(!b)continue;
+    var on2=(lvn===lv);
+    b.style.cssText=(on2?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer';
+  }
+}
+
+/* 기타 네비 */
 function doLogin(){
   var em=(document.getElementById('EM_IN')||{}).value||'',pw=(document.getElementById('PW_IN')||{}).value||'';
   var btn=document.getElementById('LOGIN_BTN'),err=document.getElementById('LOGIN_ERR');
@@ -438,116 +360,64 @@ function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut(
 function goView(v){G.prevView=G.view;G.view=v;R();}
 function goStu(id){G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;loadNotes(id);R();}
 function goBack(){
-  if(_noteListener){
-    var pr=G.stuData[_noteListener]?'students':'quit_students';
-    db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;
-  }
+  if(_noteListener){var pr=G.stuData[_noteListener]?'students':'quit_students';db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;}
   G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();
 }
 function selDay(d){G.selDay=d;R();}
 function openAdd(){G.esid=null;G.fdays=['월'];G.form=true;R();}
 function openEdit(id){var s=stuById(id);if(!s)return;G.esid=id;G.fdays=s.days?s.days.split(','):[s.day||'월'];G.form=true;R();}
 function closeForm(){G.form=false;G.esid=null;R();}
+
 function doSearch(){
   var el=document.getElementById('SRCH_INPUT');if(!el)return;
   var q=el.value.trim(),box=document.getElementById('SRCH_RES');if(!box)return;
-  if(!q){box.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:28px 0;font-size:13px">이름을 입력하고 검색 버튼을 누르세요<br><small>(초성 검색 예: ㄱ ㄴ ㄷ)</small></div>';return;}
+  if(!q){box.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:28px 0;font-size:13px">이름을 입력하고 검색 버튼을 누르세요</div>';return;}
   var ss=allStu(),res=[],i,s;
   for(i=0;i<ss.length;i++){s=ss[i];if(isCS(q)?(toCS(s.name).indexOf(q)>=0):(s.name.indexOf(q)>=0))res.push(s);}
-  if(!res.length){box.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:28px 0;font-size:13px">\''+xe(q)+'\' 검색 결과가 없습니다</div>';return;}
+  if(!res.length){box.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:28px 0;font-size:13px">검색 결과가 없습니다</div>';return;}
   var h='';for(i=0;i<res.length;i++)h+=stuCardHtml(res[i]);
   box.innerHTML=h;
 }
 
 var _toastTimer;
-function showToast(msg){G.notif=msg;R();clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){G.notif=null;R();},6000);}
+function showToast(msg){G.notif=msg;R();clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){G.notif=null;R();},5000);}
 
-/* ══ ★ 다운로드 기능 ══ */
-
-/* CSV 이스케이프 */
-function csvEsc(v){
-  var s=String(v||'');
-  if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0){
-    return '"'+s.replace(/"/g,'""')+'"';
-  }
-  return s;
-}
-
-/* BOM + CSV 다운로드 */
-function downloadCSV(filename,csvStr){
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csvStr],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+/* 다운로드 */
+function csvEsc(v){var s=String(v||'');if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)return '"'+s.replace(/"/g,'""')+'"';return s;}
+function downloadCSV(fn,csv){
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');
+  a.href=url;a.download=fn;document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
 }
-
-/* ★ 학생 정보 다운로드 */
 function downloadStudentInfo(){
-  var ss=allStu();
-  if(!ss.length){alert('다운로드할 학생 정보가 없습니다.');return;}
+  var ss=allStu();if(!ss.length){alert('다운로드할 학생 정보가 없습니다.');return;}
   ss.sort(function(a,b){return a.day.localeCompare(b.day)||a.time.localeCompare(b.time);});
-  var rows=['이름,생년월일,연락처,수업요일,수업시간,총수업횟수,진행횟수,남은횟수,등록일'];
-  var i,s;
-  for(i=0;i<ss.length;i++){
-    s=ss[i];
-    rows.push([
-      csvEsc(s.name),csvEsc(s.birthdate),csvEsc(s.contact),
-      csvEsc(s.day),csvEsc(s.time),
-      s.totalLessons,s.usedLessons,rem(s),
-      csvEsc(s.createdAt?s.createdAt.slice(0,10):'')
-    ].join(','));
-  }
-  var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-  downloadCSV('학생정보_'+today+'.csv',rows.join('\n'));
-  showToast('📥 학생 정보 다운로드 완료!');
+  var rows=['이름,생년월일,연락처,수업요일,수업시간,총수업횟수,진행횟수,남은횟수,등록일'],i,s;
+  for(i=0;i<ss.length;i++){s=ss[i];rows.push([csvEsc(s.name),csvEsc(s.birthdate),csvEsc(s.contact),csvEsc(s.day),csvEsc(s.time),s.totalLessons,s.usedLessons,rem(s),csvEsc(s.createdAt?s.createdAt.slice(0,10):'')].join(','));}
+  downloadCSV('학생정보_'+new Date().toLocaleDateString('ko-KR')+'.csv',rows.join('\n'));showToast('📥 학생 정보 다운로드 완료!');
 }
-
-/* ★ 수업 메모 다운로드 (모든 학생 노트를 한 번에 읽어서 내보내기) */
 function downloadAllNotes(){
   showToast('⏳ 수업 메모를 불러오는 중...');
   db.ref('students').once('value',function(snap){
-    var data=snap.val()||{};
-    var rows=['학생이름,회차,날짜,수업내용'];
-    var keys=Object.keys(data),i,k,s,ns,nkeys,j,nk,n;
-    var hasAny=false;
-    for(i=0;i<keys.length;i++){
-      k=keys[i];s=data[k];
-      if(!s||!s.notes)continue;
-      ns=s.notes;nkeys=Object.keys(ns);
-      nkeys.sort(function(a,b){return(+ns[a].lessonNum||0)-(+ns[b].lessonNum||0);});
-      for(j=0;j<nkeys.length;j++){
-        nk=nkeys[j];n=ns[nk];hasAny=true;
-        rows.push([csvEsc(s.name||''),n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));
-      }
-    }
+    var data=snap.val()||{},rows=['학생이름,기수,회차,날짜,수업내용'],keys,i,k,s,ns,nkeys,j,nk,n,hasAny=false;
+    keys=Object.keys(data);
+    for(i=0;i<keys.length;i++){k=keys[i];s=data[k];if(!s||!s.notes)continue;ns=s.notes;nkeys=Object.keys(ns);nkeys.sort(function(a,b){return(+ns[a].lessonNum||0)-(+ns[b].lessonNum||0);});for(j=0;j<nkeys.length;j++){nk=nkeys[j];n=ns[nk];hasAny=true;rows.push([csvEsc(s.name||''),n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}}
     if(!hasAny){showToast('📭 저장된 수업 메모가 없습니다.');return;}
-    var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    downloadCSV('수업메모_'+today+'.csv',rows.join('\n'));
-    showToast('📥 수업 메모 다운로드 완료!');
+    downloadCSV('수업메모_'+new Date().toLocaleDateString('ko-KR')+'.csv',rows.join('\n'));showToast('📥 수업 메모 다운로드 완료!');
   });
 }
-
-/* ★ 특정 학생 수업메모 다운로드 */
 function downloadStudentNotes(sid){
   var s=stuById(sid);if(!s)return;
-  var refPath=G.stuData[sid]?'students':'quit_students';
-  db.ref(refPath+'/'+sid+'/notes').once('value',function(snap){
-    var notes=snap.val()||{};
-    var keys=Object.keys(notes);
-    if(!keys.length){showToast('📭 '+s.name+' 학생의 수업 메모가 없습니다.');return;}
-    var rows=['회차,날짜,수업내용'];
-    var ns=[];var i,k,n;
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes').once('value',function(snap){
+    var notes=snap.val()||{},keys=Object.keys(notes);
+    if(!keys.length){showToast('📭 수업 메모가 없습니다.');return;}
+    var rows=['기수,회차,날짜,수업내용'],ns=[],i,k,n;
     for(i=0;i<keys.length;i++){k=keys[i];n=notes[k];n.id=n.id||k;ns.push(n);}
-    ns.sort(function(a,b){return(+a.lessonNum||0)-(+b.lessonNum||0);});
-    for(i=0;i<ns.length;i++){
-      n=ns[i];
-      rows.push([n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));
-    }
-    var today=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    downloadCSV(s.name+'_수업메모_'+today+'.csv',rows.join('\n'));
-    showToast('📥 '+s.name+' 메모 다운로드 완료!');
+    ns.sort(function(a,b){var ta=+a.term||1,tb=+b.term||1;return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
+    for(i=0;i<ns.length;i++){n=ns[i];rows.push([n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}
+    downloadCSV(s.name+'_수업메모.csv',rows.join('\n'));showToast('📥 '+s.name+' 메모 다운로드 완료!');
   });
 }
 
@@ -557,157 +427,82 @@ function ringHtml(s){
   return '<div class="ring-wrap"><div style="width:48px;height:48px;border-radius:50%;background:conic-gradient('+c+' '+p+'%,#E5E7EB '+p+'%);display:flex;align-items:center;justify-content:center"><div style="width:35px;height:35px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:13px;font-weight:800;color:'+c+';line-height:1">'+r+'</span><span style="font-size:7px;color:#9CA3AF;line-height:1">남음</span></div></div><span style="font-size:9px;color:#6B7280;margin-top:2px">'+(+s.usedLessons||0)+'/'+(+s.totalLessons||0)+'</span></div>';
 }
 function stuCardHtml(s){
-  /* days 배열 파싱 (하위호환: days 없으면 day 사용) */
   var dayList=s.days?s.days.split(','):[s.day||'월'];
   var dc=DC[dayList[0]]||DC['월'],r=rem(s);
   var bStyle=r===1?'border:2px solid #FED7AA':r<=0?'border:1.5px solid #FECACA;opacity:.88':'border:1.5px solid #E5E7EB';
-  var lvs=LEVEL_STYLE[s.level||'기타']||LEVEL_STYLE['기타'];
+  var lvs=LS[s.level||'기타']||LS['기타'];
   var lvBadge=s.level&&s.level!=='기타'?'<span style="font-size:10px;color:'+lvs.tx+';background:'+lvs.bg+';border:1px solid '+lvs.bd+';border-radius:5px;padding:1px 6px;font-weight:700">'+lvs.icon+' '+s.level+'</span>':'';
-  /* 요일 뱃지 (여러개) */
   var dayBadges='',di,dd,ddc;
   for(di=0;di<dayList.length;di++){dd=dayList[di];ddc=DC[dd]||DC['월'];dayBadges+='<span style="font-size:10px;font-weight:800;color:'+ddc.tx+';background:'+ddc.bg+';border:1px solid '+ddc.bd+';border-radius:5px;padding:1px 5px">'+dd+'</span>';}
-  return '<button class="sc" style="'+bStyle+'" onclick="doAction(event)" data-action="goStu" data-id="'+s.id+'">'
+  return '<button class="sc" style="'+bStyle+'" onclick="goStu(this.dataset.sid)" data-sid="'+xe(s.id)+'">'
     +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid '+dc.bd+';background:'+dc.bg+';flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:800;color:'+dc.tx+'">'+(dayList.length>1?dayList.join('·'):dayList[0])+'</span><span style="font-size:10px;color:'+dc.tx+';opacity:.8">'+s.time+'</span></div>'
     +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:15px;color:#111827">'+xe(s.name)+'</span>'+lvBadge+(s.birthdate?'<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border-radius:5px;padding:1px 6px">'+xe(s.birthdate)+'</span>':'')+(r===1?'<span style="font-size:11px;color:#F97316;background:#FFF7ED;border-radius:5px;padding:1px 6px;font-weight:700">⚠️1회</span>':'')+(r<=0?'<span style="font-size:11px;color:#EF4444;background:#FEF2F2;border-radius:5px;padding:1px 6px;font-weight:700">완료</span>':'')+'</div>'
     +(dayList.length>1?'<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">'+dayBadges+'<span style="font-size:10px;color:#9CA3AF">'+s.time+'</span></div>':'')
     +(s.contact?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">📞 '+xe(s.contact)+'</div>':'')+'</div>'
     +ringHtml(s)+'</button>';
 }
-function quitCardHtml(s){
-  return '<div class="quit-card">'
-    +'<div style="width:42px;height:42px;border-radius:11px;border:2px solid #FCD34D;background:#FFFBEB;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:18px">📦</span></div>'
-    +'<div style="flex:1;min-width:0;cursor:pointer" onclick="doAction(event)" data-action="goStu" data-id="'+s.id+'">'
-    +'<div style="font-weight:700;font-size:15px;color:#92400E">'+xe(s.name)+'</div>'
-    +(s.contact?'<div style="font-size:11px;color:#9CA3AF">📞 '+xe(s.contact)+'</div>':'')
-    +'<div style="font-size:10px;color:#D97706;margin-top:2px">'+s.day+'요일 '+s.time+' · 총 '+s.totalLessons+'회 중 '+s.usedLessons+'회</div>'
-    +(s.quitDate?'<div style="font-size:10px;color:#9CA3AF">퇴원: '+s.quitDate.slice(0,10)+'</div>':'')
-    +'</div>'
-    +(G.admin?'<div style="display:flex;flex-direction:column;gap:5px">'
-      +'<button class="restore-btn" onclick="doAction(event)" data-action="restoreStudent" data-id="'+s.id+'">복귀</button>'
-      +'<button class="bd" style="font-size:11px;padding:4px 9px" onclick="doAction(event)" data-action="delQuitStu" data-id="'+s.id+'">삭제</button>'
-      +'</div>':'')
-    +'</div>';
-}
+
 function alertPanelHtml(){
   var ss=allStu(),urg=[],done=[],i,s,r;
   for(i=0;i<ss.length;i++){s=ss[i];r=rem(s);if(r===1)urg.push(s);else if(r<=0)done.push(s);}
+  if(!urg.length&&!done.length)return '<div class="ap"><div class="ap-hd"><span style="font-size:17px">⚠️</span><span style="font-weight:800;color:#F97316;font-size:14px">수업 임박 학생</span></div><div style="padding:14px;text-align:center;color:#9CA3AF;font-size:13px">👍 수업 임박 학생이 없습니다</div></div>';
+  var rows='',j,st,dc2;
+  for(j=0;j<urg.length;j++){st=urg[j];dc2=DC[st.day]||DC['월'];rows+='<button class="ap-row" onclick="goStu(this.dataset.sid)" data-sid="'+xe(st.id)+'"><div style="width:38px;height:38px;border-radius:9px;border:2px solid '+dc2.bd+';background:'+dc2.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:11px;font-weight:800;color:'+dc2.tx+'">'+st.day+'</span><span style="font-size:9px;color:'+dc2.tx+';opacity:.8">'+st.time+'</span></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;color:#111827">'+xe(st.name)+'</div>'+(st.contact?'<div style="font-size:11px;color:#9CA3AF">'+xe(st.contact)+'</div>':'')+'</div><span style="background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:9px;padding:3px 9px;font-size:12px;font-weight:800;flex-shrink:0">⚠️1회!</span></button>';}
+  for(j=0;j<done.length;j++){st=done[j];dc2=DC[st.day]||DC['월'];rows+='<button class="ap-row" onclick="goStu(this.dataset.sid)" data-sid="'+xe(st.id)+'" style="opacity:.82;border-top-color:#FEE2E2"><div style="width:38px;height:38px;border-radius:9px;border:2px solid '+dc2.bd+';background:'+dc2.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:11px;font-weight:800;color:'+dc2.tx+'">'+st.day+'</span><span style="font-size:9px;color:'+dc2.tx+';opacity:.8">'+st.time+'</span></div><div style="flex:1;font-weight:700;font-size:14px;color:#9CA3AF">'+xe(st.name)+'</div><span style="background:#FEE2E2;color:#EF4444;border-radius:9px;padding:3px 9px;font-size:12px;font-weight:700;flex-shrink:0">완료</span></button>';}
   var bu=urg.length?'<span style="background:#F97316;color:#fff;border-radius:20px;padding:1px 8px;font-size:12px;font-weight:800">'+urg.length+'명</span>':'';
   var bd=done.length?'<span style="background:#EF4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700">완료'+done.length+'명</span>':'';
-  var rows='',j,st,dc;
-  if(!urg.length&&!done.length){rows='<div style="padding:14px;text-align:center;color:#9CA3AF;font-size:13px">👍 수업 임박 학생이 없습니다</div>';}
-  else{
-    for(j=0;j<urg.length;j++){st=urg[j];dc=DC[st.day]||DC['월'];rows+='<button class="ap-row" onclick="doAction(event)" data-action="goStu" data-id="'+st.id+'">'+'<div style="width:38px;height:38px;border-radius:9px;border:2px solid '+dc.bd+';background:'+dc.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:11px;font-weight:800;color:'+dc.tx+'">'+st.day+'</span><span style="font-size:9px;color:'+dc.tx+';opacity:.8">'+st.time+'</span></div>'+'<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;color:#111827">'+xe(st.name)+(st.birthdate?' <span style="font-size:11px;color:#9CA3AF;font-weight:400">'+xe(st.birthdate)+'</span>':'')+'</div>'+(st.contact?'<div style="font-size:11px;color:#9CA3AF">'+xe(st.contact)+'</div>':'')+'</div>'+'<span style="background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:9px;padding:3px 9px;font-size:12px;font-weight:800;flex-shrink:0">⚠️1회!</span></button>';}
-    for(j=0;j<done.length;j++){st=done[j];dc=DC[st.day]||DC['월'];rows+='<button class="ap-row" onclick="doAction(event)" data-action="goStu" data-id="'+st.id+'" style="opacity:.82;border-top-color:#FEE2E2">'+'<div style="width:38px;height:38px;border-radius:9px;border:2px solid '+dc.bd+';background:'+dc.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:11px;font-weight:800;color:'+dc.tx+'">'+st.day+'</span><span style="font-size:9px;color:'+dc.tx+';opacity:.8">'+st.time+'</span></div>'+'<div style="flex:1;font-weight:700;font-size:14px;color:#9CA3AF">'+xe(st.name)+'</div>'+'<span style="background:#FEE2E2;color:#EF4444;border-radius:9px;padding:3px 9px;font-size:12px;font-weight:700;flex-shrink:0">완료</span></button>';}
-  }
   return '<div class="ap"><div class="ap-hd"><span style="font-size:17px">⚠️</span><span style="font-weight:800;color:#F97316;font-size:14px">수업 임박 학생</span>'+bu+bd+'</div>'+rows+'</div>';
 }
 
-/* ★ 다운로드 패널 HTML */
-function dlPanelHtml(){
-  return '<div class="dl-panel">'
-    +'<div class="dl-panel-hd"><span style="font-size:17px">📥</span><span style="font-weight:800;color:#065F46;font-size:14px">데이터 내보내기</span></div>'
-    +'<div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px">'
-    +'<div style="display:flex;gap:8px">'
-    +'<button class="dl-btn" style="flex:1" onclick="downloadStudentInfo()">👥 학생정보 저장</button>'
-    +'<button class="dl-btn" style="flex:1;background:linear-gradient(135deg,#7C3AED,#6D28D9)" onclick="downloadAllNotes()">📝 수업메모 저장</button>'
-    +'</div>'
-    +'<div style="font-size:11px;color:#9CA3AF;text-align:center">엑셀(CSV)로 저장됩니다. 엑셀에서 열면 바로 확인 가능!</div>'
-    +'</div></div>';
+/* ══ 뷰 렌더러 ══ */
+function vLogin(){
+  return '<div class="login-bg"><div class="login-card"><div style="text-align:center;margin-bottom:26px"><div style="font-size:52px;margin-bottom:8px">🏫</div><div style="font-size:21px;font-weight:800;color:#1E1B4B">'+ACAD_NAME+'</div><div style="font-size:13px;color:#6B7280;margin-top:4px">학원 관리 시스템</div></div><label class="lbl">이메일</label><input class="fi" type="email" id="EM_IN" placeholder="이메일 입력" autocomplete="email" style="margin-bottom:12px"><label class="lbl">비밀번호</label><input class="fi" type="password" id="PW_IN" placeholder="비밀번호 입력" autocomplete="current-password" style="margin-bottom:12px"><div id="LOGIN_ERR"></div><button class="bp" onclick="doLogin()" id="LOGIN_BTN" style="margin-top:6px">로그인</button><p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:14px">원장/선생님께 계정을 발급받으세요</p></div></div>';
 }
 
-/* ══ 뷰 렌더러 ══ */
-function vLogin(){return '<div class="login-bg"><div class="login-card"><div style="text-align:center;margin-bottom:26px"><div style="font-size:52px;margin-bottom:8px">🏫</div><div style="font-size:21px;font-weight:800;color:#1E1B4B">'+ACAD_NAME+'</div><div style="font-size:13px;color:#6B7280;margin-top:4px">학원 관리 시스템</div></div><label class="lbl">이메일</label><input class="fi" type="email" id="EM_IN" placeholder="이메일 입력" autocomplete="email" style="margin-bottom:12px"><label class="lbl">비밀번호</label><input class="fi" type="password" id="PW_IN" placeholder="비밀번호 입력" autocomplete="current-password" style="margin-bottom:12px"><div id="LOGIN_ERR"></div><button class="bp" onclick="doLogin()" id="LOGIN_BTN" style="margin-top:6px">로그인</button><p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:14px">원장/선생님께 계정을 발급받으세요</p></div></div>';}
-
 function vHdr(){
-  var ss=objArr(G.stuData); /* 원장은 전체 학생 기준으로 통계 */
-  var ac=0,dc2=0,qs=allQuit().length,i,r;
+  var ss=objArr(G.stuData),ac=0,dc2=0,qs=allQuit().length,i,r;
   for(i=0;i<ss.length;i++){r=rem(ss[i]);if(r===1)ac++;else if(r<=0)dc2++;}
-  /* 원장: 전체통계 + 등록 + 배정 버튼 / 강사: 담당학생수만 */
-  var btnArea=G.admin
-    ?'<button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button>'
-     +'<button onclick="G.assignView=true;R()" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button>'
-    :'';
-  var statArea=G.admin
-    ?'<div style="display:flex;gap:8px;margin-top:10px">'
-      +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div>'
-      +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div>'
-      +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div>'
-      +'<div class="hstat" style="cursor:pointer" onclick="doAction(event)" data-action="goView" data-val="quit"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div>'
-      +'</div>'
-    /* 강사: 담당 학생 수만 표시 */
-    :'<div style="display:flex;gap:8px;margin-top:10px">'
-      +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+allStu().length+'</div><div style="color:#A5B4FC;font-size:9px">담당 학생</div></div>'
-      +'</div>';
-  return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div>'
-    +'<div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리'+(G.admin?'':'<span style="font-size:11px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:6px;margin-left:7px">강사</span>')+'</div></div>'
-    +'<div style="display:flex;gap:6px">'+btnArea
-    +'<button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button>'
-    +'</div></div>'+statArea+'</div>';
+  var myCount=allStu().length;
+  if(G.admin){
+    return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리</div></div><div style="display:flex;gap:6px"><button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button><button onclick="goView(\'assign\')" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button><button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div><div class="hstat" style="cursor:pointer" data-view="quit" onclick="goView(this.dataset.view)"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div></div></div>';
+  } else {
+    return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리 <span style="font-size:11px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:6px;margin-left:7px">강사</span></div></div><button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+myCount+'</div><div style="color:#A5B4FC;font-size:9px">담당 학생</div></div></div></div>';
+  }
 }
 
 function vTabs(){
-  var tabs=[['sch','📅 요일별'],['srch','🔍 검색'],['all','📋 전체'],['quit','📦 퇴원']];
-  var h='<div class="tabs">',i,t;
+  var tabs=[['sch','📅 요일별'],['srch','🔍 검색'],['all','📋 전체']];
+  if(G.admin)tabs.push(['quit','📦 퇴원']);
+  var h='<div class="tabs">',i,t,cls;
   for(i=0;i<tabs.length;i++){
-    t=tabs[i];
-    var cls='tab'+(t[0]==='quit'?' quit-tab':'')+(G.view===t[0]?' on':'');
-    h+='<button class="'+cls+'" onclick="doAction(event)" data-action="goView" data-val="'+t[0]+'">'+ t[1]+'</button>';
+    t=tabs[i];cls='tab'+(t[0]==='quit'?' quit-tab':'')+(G.view===t[0]?' on':'');
+    h+='<button class="'+cls+'" data-view="'+t[0]+'" onclick="goView(this.dataset.view)">'+t[1]+'</button>';
   }
   return h+'</div>';
 }
 
-/* 등급 정렬 순서 */
-var LEVEL_ORDER={'선수':0,'상급':1,'중급':2,'기타':3};
-var LEVEL_STYLE={
-  '선수':{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185',icon:'🥇'},
-  '상급':{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C',icon:'🥈'},
-  '중급':{bg:'#ECFDF5',tx:'#065F46',bd:'#34D399',icon:'🥉'},
-  '기타':{bg:'#F3F4F6',tx:'#374151',bd:'#9CA3AF',icon:'📚'}
-};
-
 function vSchedule(){
-  var ss=allStu(),ds=[],i,s,cnt,d,dc,on,h='',dayList;
-  /* ★ 선택된 요일에 포함된 학생 모두 표시 (days 배열 지원) */
-  for(i=0;i<ss.length;i++){
-    dayList=ss[i].days?ss[i].days.split(','):[ss[i].day||'월'];
-    if(dayList.indexOf(G.selDay)>=0)ds.push(ss[i]);
-  }
-  ds.sort(function(a,b){
-    var la=LEVEL_ORDER[a.level||'기타']||3,lb=LEVEL_ORDER[b.level||'기타']||3;
-    return la!==lb?la-lb:a.time.localeCompare(b.time);
-  });
+  var ss=allStu(),ds=[],i,s,cnt,d,dc2,on,h='',dayList;
+  for(i=0;i<ss.length;i++){dayList=ss[i].days?ss[i].days.split(','):[ss[i].day||'월'];if(dayList.indexOf(G.selDay)>=0)ds.push(ss[i]);}
+  ds.sort(function(a,b){return(LO[a.level||'기타']||3)-(LO[b.level||'기타']||3)||a.time.localeCompare(b.time);});
   h+='<div class="dtabs">';
   for(i=0;i<DAYS.length;i++){
     d=DAYS[i];cnt=0;
-    for(var j=0;j<ss.length;j++){
-      var dl=ss[j].days?ss[j].days.split(','):[ss[j].day||'월'];
-      if(dl.indexOf(d)>=0)cnt++;
-    }
-    dc=DC[d];on=(G.selDay===d);
-    h+='<button class="dtab" onclick="doAction(event)" data-action="selDay" data-val="'+d+'" style="border-color:'+(on?dc.bd:'#E5E7EB')+';background:'+(on?dc.bg:'#fff')+';color:'+(on?dc.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';
+    for(var j=0;j<ss.length;j++){var dl=ss[j].days?ss[j].days.split(','):[ss[j].day||'월'];if(dl.indexOf(d)>=0)cnt++;}
+    dc2=DC[d];on=(G.selDay===d);
+    h+='<button class="dtab" data-day="'+d+'" onclick="selDay(this.dataset.day)" style="border-color:'+(on?dc2.bd:'#E5E7EB')+';background:'+(on?dc2.bg:'#fff')+';color:'+(on?dc2.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';
   }
   h+='</div>';
-  if(!ds.length){
-    h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
-    return h;
-  }
-  var LEVELS=['선수','상급','중급','기타'];
-  var groups={},lv,ls,k;
+  if(!ds.length)return h+'<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
+  var LEVELS=['선수','상급','중급','기타'],groups={},lv,ls2,k;
   for(k=0;k<LEVELS.length;k++)groups[LEVELS[k]]=[];
   for(i=0;i<ds.length;i++){lv=ds[i].level||'기타';if(!groups[lv])groups[lv]=[];groups[lv].push(ds[i]);}
   h+='<div style="font-size:12px;color:#6B7280;margin-bottom:10px">'+G.selDay+'요일 전체 '+ds.length+'명</div>';
   for(k=0;k<LEVELS.length;k++){
-    lv=LEVELS[k];ls=groups[lv];
-    if(!ls||!ls.length)continue;
-    var lvs=LEVEL_STYLE[lv]||LEVEL_STYLE['기타'];
-    h+='<div style="background:'+lvs.bg+';border:2px solid '+lvs.bd+';border-radius:12px;padding:8px 12px;margin-bottom:8px">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-      +'<span style="font-size:16px">'+lvs.icon+'</span>'
-      +'<span style="font-weight:800;color:'+lvs.tx+';font-size:14px">'+lv+'</span>'
-      +'<span style="background:'+lvs.bd+';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700">'+ls.length+'명</span>'
-      +'</div>';
-    for(i=0;i<ls.length;i++)h+=stuCardHtml(ls[i]);
+    lv=LEVELS[k];ls2=groups[lv];if(!ls2||!ls2.length)continue;
+    var lvs2=LS[lv]||LS['기타'];
+    h+='<div style="background:'+lvs2.bg+';border:2px solid '+lvs2.bd+';border-radius:12px;padding:8px 12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:16px">'+lvs2.icon+'</span><span style="font-weight:800;color:'+lvs2.tx+';font-size:14px">'+lv+'</span><span style="background:'+lvs2.bd+';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700">'+ls2.length+'명</span></div>';
+    for(i=0;i<ls2.length;i++)h+=stuCardHtml(ls2[i]);
     h+='</div>';
   }
   return h;
@@ -722,17 +517,89 @@ function vAll(){
   return h;
 }
 
-/* ★ 퇴원 학생 뷰 */
 function vQuit(){
-  var qs=allQuit(),h='',i;
+  var qs=allQuit(),h='',i,s;
   qs.sort(function(a,b){return(b.quitDate||'').localeCompare(a.quitDate||'');});
   h='<div class="sec-ttl">📦 퇴원 학생 ('+qs.length+'명)</div>';
-  if(G.admin){
-    h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:12px;color:#92400E">'
-      +'💡 퇴원 학생의 수업 기록은 그대로 보존됩니다.<br>복귀 버튼을 누르면 재학생으로 이동합니다.</div>';
+  if(G.admin)h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:12px;color:#92400E">💡 수업 기록 보존. 복귀 버튼으로 재학생 이동 가능합니다.</div>';
+  if(!qs.length){h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">퇴원 학생이 없습니다</div></div>';return h;}
+  for(i=0;i<qs.length;i++){
+    s=qs[i];
+    h+='<div class="quit-card">';
+    h+='<div style="width:42px;height:42px;border-radius:11px;border:2px solid #FCD34D;background:#FFFBEB;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="font-size:20px">📦</span></div>';
+    h+='<div style="flex:1;min-width:0;cursor:pointer" onclick="goStu(this.dataset.sid)" data-sid="'+xe(s.id)+'">';
+    h+='<div style="font-weight:700;font-size:15px;color:#92400E">'+xe(s.name)+'</div>';
+    if(s.contact)h+='<div style="font-size:11px;color:#9CA3AF">📞 '+xe(s.contact)+'</div>';
+    h+='<div style="font-size:10px;color:#D97706;margin-top:2px">'+s.day+'요일 '+s.time+' · 총 '+s.totalLessons+'회 중 '+s.usedLessons+'회</div>';
+    if(s.quitDate)h+='<div style="font-size:10px;color:#9CA3AF">퇴원: '+s.quitDate.slice(0,10)+'</div>';
+    h+='</div>';
+    if(G.admin){
+      h+='<div style="display:flex;flex-direction:column;gap:5px">';
+      h+='<button class="restore-btn" data-sid="'+xe(s.id)+'" onclick="restoreStudent(this.dataset.sid)">복귀</button>';
+      h+='<button class="bd" style="font-size:11px;padding:4px 9px" data-sid="'+xe(s.id)+'" onclick="delQuitStu(this.dataset.sid)">삭제</button>';
+      h+='</div>';
+    }
+    h+='</div>';
   }
-  if(!qs.length)h+='<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">퇴원 학생이 없습니다</div></div>';
-  else for(i=0;i<qs.length;i++)h+=quitCardHtml(qs[i]);
+  return h;
+}
+
+/* ── 배정 화면 (원장 전용) ── */
+function vAssign(){
+  var all=objArr(G.stuData);
+  var TEACHERS=['letter4340@naver.com','novica18@naver.com'];
+  var h='';
+  h+='<div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:2px solid #818CF8;border-radius:14px;padding:14px;margin-bottom:14px">';
+  h+='<div style="font-size:16px;font-weight:800;color:#1E1B4B;margin-bottom:4px">⚙️ 담당 학생 배정</div>';
+  h+='<div style="font-size:12px;color:#4338CA">강사를 선택하고 담당 학생을 지정하세요.</div>';
+  h+='</div>';
+  var i,email,key,assigned,cnt2;
+  if(!G.assignTeacher){
+    h+='<div class="sec-ttl">강사 선택</div>';
+    for(i=0;i<TEACHERS.length;i++){
+      email=TEACHERS[i];key=eKey(email);
+      assigned=G.assignData[key]||{};cnt2=Object.keys(assigned).length;
+      h+='<button data-email="'+email+'" onclick="openAssign(this.dataset.email)" style="width:100%;background:#fff;border:2px solid #E5E7EB;border-radius:14px;padding:14px 16px;margin-bottom:10px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px">';
+      h+='<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:20px">👤</span></div>';
+      h+='<div style="flex:1"><div style="font-weight:800;font-size:15px;color:#111827">'+email+'</div><div style="font-size:12px;color:#6B7280;margin-top:3px">배정된 학생: <b style="color:#4338CA">'+cnt2+'명</b> / 전체 '+all.length+'명</div></div>';
+      h+='<span style="color:#9CA3AF;font-size:20px">›</span>';
+      h+='</button>';
+    }
+    h+='<button data-view="sch" onclick="goView(this.dataset.view)" style="width:100%;background:#F3F4F6;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;margin-top:4px">← 돌아가기</button>';
+  } else {
+    var key2=eKey(G.assignTeacher);
+    var assigned2=G.assignData[key2]||{};
+    var cnt3=Object.keys(assigned2).length;
+    h+='<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px;border:2px solid #E5E7EB">';
+    h+='<div style="font-weight:700;color:#111827;margin-bottom:2px">👤 '+G.assignTeacher+'</div>';
+    h+='<div style="font-size:12px;color:#6B7280">배정된 학생: <b style="color:#4338CA" id="ASSIGN_CNT">'+cnt3+'명</b> / 전체 '+all.length+'명</div>';
+    h+='</div>';
+    h+='<div style="display:flex;gap:8px;margin-bottom:14px">';
+    h+='<button onclick="assignAll()" style="flex:1;background:#EEF2FF;color:#4338CA;border:none;border-radius:10px;padding:10px;font-weight:700;font-size:13px;cursor:pointer">✅ 전체 선택</button>';
+    h+='<button onclick="assignNone()" style="flex:1;background:#FEE2E2;color:#DC2626;border:none;border-radius:10px;padding:10px;font-weight:700;font-size:13px;cursor:pointer">🗑️ 전체 해제</button>';
+    h+='</div>';
+    h+='<div class="sec-ttl">학생 선택 (탭하면 배정/해제)</div>';
+    var sorted=all.slice().sort(function(a,b){return(LO[a.level||'기타']||3)-(LO[b.level||'기타']||3)||a.name.localeCompare(b.name);});
+    var si,stu,isOn,lvs3,dayList3;
+    for(si=0;si<sorted.length;si++){
+      stu=sorted[si];isOn=assigned2[stu.id]===true;
+      lvs3=LS[stu.level||'기타']||LS['기타'];
+      dayList3=stu.days?stu.days.split(','):[stu.day||'월'];
+      h+='<div class="assign-stu'+(isOn?' on':'')+'" id="ASTU_'+stu.id+'" data-sid="'+stu.id+'" onclick="toggleAssign(this.dataset.sid)">';
+      h+='<div style="width:36px;height:36px;border-radius:9px;background:'+(isOn?'#6366F1':'#E5E7EB')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+      h+='<span style="color:#fff;font-size:18px">'+(isOn?'✅':'⬜')+'</span></div>';
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:700;font-size:14px;color:#111827">'+xe(stu.name)+'</span>';
+      if(stu.level&&stu.level!=='기타')h+='<span style="font-size:10px;color:'+lvs3.tx+';background:'+lvs3.bg+';border:1px solid '+lvs3.bd+';border-radius:4px;padding:1px 5px;font-weight:700">'+lvs3.icon+' '+stu.level+'</span>';
+      h+='<span style="font-size:10px;color:#9CA3AF">'+dayList3.join('·')+' '+stu.time+'</span></div>';
+      if(stu.birthdate)h+='<div style="font-size:11px;color:#9CA3AF">'+xe(stu.birthdate)+'</div>';
+      h+='</div></div>';
+    }
+    h+='<div style="display:flex;gap:9px;margin-top:16px">';
+    h+='<button onclick="closeAssign()" style="flex:1;background:#F3F4F6;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#374151;cursor:pointer">← 강사 목록</button>';
+    h+='<button onclick="confirmAssign()" style="flex:2;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:800;cursor:pointer">✅ 배정 완료</button>';
+    h+='</div>';
+  }
   return h;
 }
 
@@ -741,285 +608,181 @@ function vDetail(){
   if(!s)return '<div class="empty"><div style="font-size:30px">😕</div><p style="font-size:13px">학생 정보를 찾을 수 없습니다</p></div>';
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100);
   var dayList=s.days?s.days.split(','):[s.day||'월'];
-  var dc=DC[dayList[0]]||DC['월'],c=rc(r);
+  var dc2=DC[dayList[0]]||DC['월'],c=rc(r);
   var isQuit=!!G.quitData[G.sid];
   var ns=noteArr(G.curNotes),rev=[],i,n,h='';
   for(i=ns.length-1;i>=0;i--)rev.push(ns[i]);
 
   h='<button class="back-btn" onclick="goBack()">← 목록으로</button>';
-  if(isQuit){h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700">📦 퇴원 학생 (열람 전용)'+(G.admin?'&nbsp;&nbsp;<button class="restore-btn" style="font-size:12px" onclick="doAction(event)" data-action="restoreStudent" data-id="'+s.id+'">↩️ 복귀</button>':'')+'</div>';}
-  h+='<div class="card" style="background:linear-gradient(135deg,'+dc.bg+',#fff);border:2px solid '+dc.bd+'">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><div style="font-size:22px;font-weight:800;color:#111827">'+xe(s.name)+'</div>'
-    +(s.level&&s.level!=='기타'?'<span style="font-size:12px;color:'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).tx+';background:'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).bg+';border:1.5px solid '+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).bd+';border-radius:7px;padding:2px 9px;font-weight:800">'+(LEVEL_STYLE[s.level]||LEVEL_STYLE['기타']).icon+' '+s.level+'</span>':'')
-    +'</div>'
-    +'<div style="font-size:12px;color:#6B7280;margin-top:3px">'+(s.birthdate?'<span style="margin-right:10px">📅 '+xe(s.birthdate)+'</span>':'')+(s.contact?'<span>📞 '+xe(s.contact)+'</span>':'')+'</div></div>'
-    +(G.admin&&!isQuit?'<div style="display:flex;gap:6px"><button onclick="doAction(event)" data-action="openEdit" data-id="'+s.id+'" style="background:#6366F1;color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">수정</button><button class="bg-btn" onclick="doAction(event)" data-action="moveToQuit" data-id="'+s.id+'" style="font-size:11px;padding:5px 9px">퇴원</button><button class="bd" onclick="doAction(event)" data-action="delStu" data-id="'+s.id+'">삭제</button></div>':'')
-    +(G.admin&&isQuit?'<div style="display:flex;gap:6px"><button class="bd" onclick="doAction(event)" data-action="delQuitStu" data-id="'+s.id+'">삭제</button></div>':'')
-    +'</div>'
-    +'<div style="display:flex;align-items:center;gap:11px;margin-top:13px;flex-wrap:wrap">'
-    +'<div style="background:'+dc.bg+';border:2px solid '+dc.bd+';border-radius:10px;padding:5px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">'
-    +(function(){var h='',di,dd,ddc;for(di=0;di<dayList.length;di++){dd=dayList[di];ddc=DC[dd]||DC['월'];h+='<span style="font-weight:800;color:'+ddc.tx+';font-size:13px;background:'+ddc.bg+';border:1px solid '+ddc.bd+';border-radius:6px;padding:1px 7px">'+dd+'</span>';}return h;})()
-    +'<span style="font-weight:700;color:'+dc.tx+';font-size:13px">'+s.time+'</span></div>'
-    +ringHtml(s)
-    +'<div style="flex:1;min-width:100px"><div style="font-size:11px;color:#6B7280;margin-bottom:3px">수업 진행률</div><div class="pbar"><div class="pfill" style="width:'+p+'%;background:'+c+'"></div></div><div style="font-size:10px;color:#9CA3AF;margin-top:3px">'+(+s.usedLessons||0)+'회 완료 / 총 '+(+s.totalLessons||0)+'회 ('+r+'회 남음)</div></div></div>'
-    +(r===1?'<div style="margin-top:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;font-size:13px;color:#F97316;font-weight:700">⚠️ 수업이 1회 남았습니다! 재등록을 안내해 주세요.</div>':'')
-    +(r<=0&&!isQuit?'<div style="margin-top:10px;background:#EEF2FF;border:1px solid #818CF8;border-radius:8px;padding:8px 12px;font-size:13px;color:#4338CA;font-weight:700">✅ 모든 수업 완료! <span style="font-size:12px">아래 버튼으로 수업을 추가하거나 퇴원 처리 하세요.</span></div>':'')
-    +'</div>';
 
-  /* ★ 수업 진행 버튼: 완료여도 클릭하면 추가 모달 */
-  if(!isQuit){
-    h+='<button class="bp" style="margin-bottom:10px" onclick="doAction(event)" data-action="addLesson" data-id="'+s.id+'">'
-      +(r<=0?'🔄 수업 횟수 추가하기':'+ 수업 진행 (기록 추가)')+'</button>';
+  if(isQuit){
+    h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700">📦 퇴원 학생';
+    if(G.admin)h+='&nbsp;&nbsp;<button class="restore-btn" style="font-size:12px" data-sid="'+xe(s.id)+'" onclick="restoreStudent(this.dataset.sid)">↩️ 복귀</button>';
+    h+='</div>';
   }
 
-  /* 수업메모 다운로드 버튼 */
-  h+='<button class="dl-btn" style="width:100%;justify-content:center;margin-bottom:14px" onclick="doAction(event)" data-action="dlNotes" data-id="'+s.id+'">📥 이 학생 수업메모 저장</button>';
+  var lvs4=LS[s.level||'기타']||LS['기타'];
+  h+='<div class="card" style="background:linear-gradient(135deg,'+dc2.bg+',#fff);border:2px solid '+dc2.bd+';border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.07)">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+  h+='<div><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><div style="font-size:22px;font-weight:800;color:#111827">'+xe(s.name)+'</div>';
+  if(s.level&&s.level!=='기타')h+='<span style="font-size:12px;color:'+lvs4.tx+';background:'+lvs4.bg+';border:1.5px solid '+lvs4.bd+';border-radius:7px;padding:2px 9px;font-weight:800">'+lvs4.icon+' '+s.level+'</span>';
+  h+='</div><div style="font-size:12px;color:#6B7280;margin-top:3px">';
+  if(s.birthdate)h+='<span style="margin-right:10px">📅 '+xe(s.birthdate)+'</span>';
+  if(s.contact)h+='<span>📞 '+xe(s.contact)+'</span>';
+  h+='</div></div>';
+  if(G.admin&&!isQuit){
+    h+='<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">';
+    h+='<button onclick="openEdit(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="background:#6366F1;color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">수정</button>';
+    h+='<button class="bg-btn" onclick="moveToQuit(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="font-size:11px;padding:5px 9px">퇴원</button>';
+    h+='<button class="bd" onclick="delStu(this.dataset.sid)" data-sid="'+xe(s.id)+'">삭제</button>';
+    h+='</div>';
+  }
+  if(G.admin&&isQuit)h+='<button class="bd" onclick="delQuitStu(this.dataset.sid)" data-sid="'+xe(s.id)+'">삭제</button>';
+  h+='</div>';
 
+  h+='<div style="display:flex;align-items:center;gap:11px;margin-top:13px;flex-wrap:wrap">';
+  h+='<div style="background:'+dc2.bg+';border:2px solid '+dc2.bd+';border-radius:10px;padding:5px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">';
+  for(var di=0;di<dayList.length;di++){var dd=dayList[di];var ddc=DC[dd]||DC['월'];h+='<span style="font-weight:800;color:'+ddc.tx+';font-size:13px;background:'+ddc.bg+';border:1px solid '+ddc.bd+';border-radius:6px;padding:1px 7px">'+dd+'</span>';}
+  h+='<span style="font-weight:700;color:'+dc2.tx+';font-size:13px">'+s.time+'</span></div>';
+  h+=ringHtml(s);
+  h+='<div style="flex:1;min-width:100px"><div style="font-size:11px;color:#6B7280;margin-bottom:3px">수업 진행률</div><div class="pbar"><div class="pfill" style="width:'+p+'%;background:'+c+'"></div></div><div style="font-size:10px;color:#9CA3AF;margin-top:3px">'+(+s.usedLessons||0)+'회 완료 / 총 '+(+s.totalLessons||0)+'회 ('+r+'회 남음)</div></div>';
+  h+='</div>';
+
+  if(r===1)h+='<div style="margin-top:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;font-size:13px;color:#F97316;font-weight:700">⚠️ 수업이 1회 남았습니다!</div>';
+  if(r<=0&&!isQuit)h+='<div style="margin-top:10px;background:#EEF2FF;border:1px solid #818CF8;border-radius:8px;padding:8px 12px;font-size:13px;color:#4338CA;font-weight:700">✅ 모든 수업 완료! 수업 추가 또는 퇴원 처리 하세요.</div>';
+  h+='</div>';
+
+  if(!isQuit){
+    h+='<button class="bp" style="margin-bottom:10px" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">';
+    h+=(r<=0?'🔄 수업 횟수 추가하기':'+ 수업 진행 (기록 추가)')+'</button>';
+  }
+  h+='<button class="dl-btn" style="width:100%;margin-bottom:14px" onclick="downloadStudentNotes(this.dataset.sid)" data-sid="'+xe(s.id)+'">📥 이 학생 수업메모 저장</button>';
   h+='<div class="sec-ttl">📝 수업 기록 ('+ns.length+'회)</div>';
-  if(!ns.length){h+='<div style="text-align:center;color:#9CA3AF;padding:28px;background:#F9FAFB;border-radius:12px;font-size:13px"><div style="font-size:26px;margin-bottom:7px">📋</div>아직 수업 기록이 없습니다<br><span style="font-size:12px">위 버튼으로 수업을 기록하세요</span></div>';}
-  else{
+
+  if(!ns.length){
+    h+='<div style="text-align:center;color:#9CA3AF;padding:28px;background:#F9FAFB;border-radius:12px;font-size:13px"><div style="font-size:26px;margin-bottom:7px">📋</div>아직 수업 기록이 없습니다</div>';
+  } else {
     for(i=0;i<rev.length;i++){
       n=rev[i];
-      /* 기수 구분선 */
-      var termLabel='';
-      /* rev는 최신→오래된 순이므로 다음 항목(i+1)과 기수 비교 */
-      var curTermN=+n.term||1;
-      var nextTermN=(i+1<rev.length)?(+rev[i+1].term||1):0;
-      if(i===0){
-        termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:16px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:14px">'+curTermN+'기</span>'+(curTermN>1?'<span style="font-size:11px;color:#6B7280">현재 진행 중</span>':'')+' </div>';
-      } else if(curTermN!==nextTermN&&nextTermN>0){
-        termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:16px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:14px">'+curTermN+'기</span>'+(curTermN>1?'<span style="font-size:11px;color:#6B7280">1회부터 시작</span>':'')+' </div>';
-      }
+      var curTermN=+n.term||1,nextTermN=(i+1<rev.length)?(+rev[i+1].term||1):0,termLabel='';
+      if(i===0)termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:14px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:13px">'+curTermN+'기'+(curTermN>1?' (진행중)':'')+'</span></div>';
+      else if(curTermN!==nextTermN&&nextTermN>0)termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:14px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:13px">'+curTermN+'기</span></div>';
       h+=termLabel;
-      h+='<div class="nc"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(curTermN>1?curTermN+'기 ':'')+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>'
-        +'<div style="display:flex;gap:5px">'
-        +(!isQuit?'<button onclick="doAction(event)" data-action="editNote" data-nid="'+n.id+'" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button>':'')
-        +(G.admin?'<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="doAction(event)" data-action="delNote" data-id="'+s.id+'" data-nid="'+n.id+'">삭제</button>':'')
-        +'</div></div>'
-        +(G.enid===n.id
-          ?'<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea><div style="display:flex;gap:7px;margin-top:8px"><button class="bp" style="flex:1;padding:9px;border-radius:10px;font-size:13px" onclick="doAction(event)" data-action="saveNote" data-id="'+s.id+'" data-nid="'+n.id+'">저장</button><button class="bs" style="padding:9px 14px;border-radius:10px;font-size:13px" onclick="G.enid=null;R()">취소</button></div>'
-          :'<div style="font-size:13px;color:'+(n.content?'#374151':'#9CA3AF')+';line-height:1.6;white-space:pre-wrap">'+(n.content||'✏️ 메모 버튼을 눌러 수업 내용을 입력하세요')+'</div>'
-        )+'</div>';
+      h+='<div class="nc"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      h+='<div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(curTermN>1?curTermN+'기 ':'')+''+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>';
+      h+='<div style="display:flex;gap:5px">';
+      if(!isQuit)h+='<button data-nid="'+xe(n.id)+'" onclick="G.enid=this.dataset.nid;R()" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button>';
+      if(G.admin)h+='<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'" onclick="delNote(this.dataset.sid,this.dataset.nid)">삭제</button>';
+      h+='</div></div>';
+      if(G.enid===n.id){
+        h+='<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea>';
+        h+='<div style="display:flex;gap:7px;margin-top:8px">';
+        h+='<button class="bp" style="flex:1;padding:9px;border-radius:10px;font-size:13px" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'" onclick="saveNote(this.dataset.sid,this.dataset.nid)">저장</button>';
+        h+='<button class="bs" style="padding:9px 14px;border-radius:10px;font-size:13px" onclick="G.enid=null;R()">취소</button>';
+        h+='</div>';
+      } else {
+        h+='<div style="font-size:13px;color:'+(n.content?'#374151':'#9CA3AF')+';line-height:1.6;white-space:pre-wrap">'+(n.content||'✏️ 메모 버튼을 눌러 수업 내용을 입력하세요')+'</div>';
+      }
+      h+='</div>';
     }
   }
   return h+'<div style="height:32px"></div>';
 }
 
 function vForm(){
-  var s=G.esid?stuById(G.esid):null;
-  var i,d,dc,h='';
-  h='<div class="modal" onclick="if(event.target===this)closeForm()"><div class="modal-c"><div style="width:38px;height:4px;background:#E5E7EB;border-radius:4px;margin:0 auto 18px"></div><div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:16px">'+(s?'학생 정보 수정':'새 학생 등록')+'</div>';
+  var s=G.esid?stuById(G.esid):null,i,d,dc2,h='';
+  h='<div class="modal" onclick="if(event.target===this)closeForm()"><div class="modal-c">';
+  h+='<div style="width:38px;height:4px;background:#E5E7EB;border-radius:4px;margin:0 auto 18px"></div>';
+  h+='<div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:16px">'+(s?'학생 정보 수정':'새 학생 등록')+'</div>';
   h+='<label class="lbl">이름 *</label><input class="fi" type="text" id="F_NAME" value="'+xe(s?s.name||'':'')+'" placeholder="학생 이름" style="margin-bottom:12px">';
   h+='<label class="lbl">연락처</label><input class="fi" type="tel" id="F_CONTACT" value="'+xe(s?s.contact||'':'')+'" placeholder="010-0000-0000" style="margin-bottom:12px">';
   h+='<label class="lbl">생년월일</label><input class="fi" type="text" id="F_BIRTH" value="'+xe(s?s.birthdate||'':'')+'" placeholder="예: 2015-03-15" style="margin-bottom:12px">';
-  h+='<label class="lbl">수강 요일 <span style="font-size:11px;color:#6B7280;font-weight:400">(여러 요일 선택 가능)</span></label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">';
-  for(i=0;i<DAYS.length;i++){d=DAYS[i];dc=DC[d];var on2=(G.fdays.indexOf(d)>=0);h+='<button id="FBTN_'+d+'" onclick="doAction(event)" data-action="toggleFday" data-val="'+d+'" style="'+(on2?'background:'+dc.bg+';border:2px solid '+dc.bd+';color:'+dc.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';}
-  h+='</div><div style="font-size:11px;color:#6B7280;margin-bottom:12px">선택된 요일: <b id="FDAYS_LABEL" style="color:#4338CA">'+G.fdays.join(', ')+'</b></div>';
+  h+='<label class="lbl">수강 요일 <span style="font-size:11px;color:#6B7280;font-weight:400">(여러 요일 선택 가능)</span></label>';
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">';
+  for(i=0;i<DAYS.length;i++){
+    d=DAYS[i];dc2=DC[d];var on2=G.fdays.indexOf(d)>=0;
+    h+='<button id="FBTN_'+d+'" data-day="'+d+'" onclick="toggleFday(this.dataset.day)" style="'+(on2?'background:'+dc2.bg+';border:2px solid '+dc2.bd+';color:'+dc2.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 11px;border-radius:10px;font-size:13px;cursor:pointer">'+d+'</button>';
+  }
+  h+='</div>';
+  h+='<div style="font-size:11px;color:#6B7280;margin-bottom:12px">선택된 요일: <b id="FDAYS_LABEL" style="color:#4338CA">'+G.fdays.join(', ')+'</b></div>';
   h+='<label class="lbl">수업 시간</label><select class="fi" id="F_TIME" style="margin-bottom:12px;cursor:pointer">';
   for(i=0;i<TIMES.length;i++)h+='<option value="'+TIMES[i]+'"'+(TIMES[i]===(s?s.time:'15:00')?' selected':'')+'>'+TIMES[i]+'</option>';
   h+='</select>';
-  /* 등급 선택 */
-  var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst,lvon;
+  var LVLIST=['선수','상급','중급','기타'],curLv=s?s.level||'기타':'기타',lvi,lvn,lvst2,lvon2;
   h+='<label class="lbl">등급</label><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">';
   for(lvi=0;lvi<LVLIST.length;lvi++){
-    lvn=LVLIST[lvi];lvst=LEVEL_STYLE[lvn];lvon=(curLv===lvn);
-    h+='<button type="button" id="FLVBTN_'+lvn+'" onclick="doAction(event)" data-action="setFlevel" data-val="'+lvn+'" style="'+(lvon?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer">'+lvst.icon+' '+lvn+'</button>';
+    lvn=LVLIST[lvi];lvst2=LS[lvn];lvon2=(curLv===lvn);
+    h+='<button type="button" id="FLVBTN_'+lvn+'" data-lv="'+lvn+'" onclick="setFlevel(this.dataset.lv)" style="'+(lvon2?'background:'+lvst2.bg+';border:2px solid '+lvst2.bd+';color:'+lvst2.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer">'+lvst2.icon+' '+lvn+'</button>';
   }
   h+='</div><input type="hidden" id="F_LEVEL" value="'+curLv+'">';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px"><div><label class="lbl">총 수업 횟수</label><input class="fi" type="number" id="F_TOTAL" min="1" value="'+(s?s.totalLessons:10)+'"></div><div><label class="lbl">진행한 횟수</label><input class="fi" type="number" id="F_USED" min="0" value="'+(s?s.usedLessons:0)+'"></div></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px">';
+  h+='<div><label class="lbl">총 수업 횟수</label><input class="fi" type="number" id="F_TOTAL" min="1" value="'+(s?s.totalLessons:10)+'"></div>';
+  h+='<div><label class="lbl">진행한 횟수</label><input class="fi" type="number" id="F_USED" min="0" value="'+(s?s.usedLessons:0)+'"></div>';
+  h+='</div>';
   h+='<div style="display:flex;gap:9px"><button class="bs" onclick="closeForm()" style="flex:1;padding:12px;border-radius:12px">취소</button><button class="bp" onclick="saveStu()" style="flex:2;border-radius:12px">'+(s?'수정 완료':'등록하기')+'</button></div>';
-  return h+'</div></div>';
+  h+='</div></div>';
+  return h;
 }
 
-function setFlevel(lv){
-  var fi=document.getElementById('F_LEVEL');if(fi)fi.value=lv;
-  var LVLIST=['선수','상급','중급','기타'],i,lvn,lvst,b;
-  for(i=0;i<LVLIST.length;i++){
-    lvn=LVLIST[i];lvst=LEVEL_STYLE[lvn];b=document.getElementById('FLVBTN_'+lvn);if(!b)continue;
-    var on=(lvn===lv);
-    b.style.cssText=(on?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer';
-  }
-}
-
-/* ★ 수업 횟수 추가 모달 */
 function vAddLessonModal(){
   var s=stuById(G.addLessonSid);if(!s)return'';
-  return '<div class="lesson-modal" onclick="if(event.target===this)closeAddLesson()">'
-    +'<div class="lesson-modal-c">'
-    +'<div style="text-align:center;font-size:22px;margin-bottom:10px">🔄</div>'
-    +'<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">수업 횟수 추가</div>'
-    +'<div style="font-size:13px;color:#6B7280;text-align:center;margin-bottom:18px"><b>'+xe(s.name)+'</b> 학생의 모든 수업이 완료되었습니다.<br>추가할 수업 횟수를 입력해 주세요.</div>'
-    +'<div style="background:#F3F4F6;border-radius:11px;padding:13px;margin-bottom:16px">'
-    +'<div style="font-size:12px;color:#6B7280;margin-bottom:3px">현재: '+s.usedLessons+'/'+s.totalLessons+'회</div>'
-    +'<label class="lbl">추가할 수업 횟수</label>'
-    +'<input class="fi" type="number" id="ADD_LESSON_CNT" value="10" min="1" max="200" style="font-size:18px;font-weight:700;text-align:center">'
-    +'</div>'
-    +'<div style="display:flex;gap:9px">'
-    +'<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>'
-    +'<button class="bp" onclick="doAction(event)" data-action="doAddLesson" data-id="'+s.id+'" style="flex:2;border-radius:12px">✅ 추가하기</button>'
-    +'</div>'
-    +'</div></div>';
+  var curTerm=+s.term||1,nextTerm=curTerm+1;
+  var h='<div class="lesson-modal"><div class="lesson-modal-c">';
+  h+='<div style="text-align:center;font-size:26px;margin-bottom:8px">🔄</div>';
+  h+='<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">새 기수 수업 추가</div>';
+  h+='<div style="font-size:13px;color:#6B7280;text-align:center;margin-bottom:14px"><b>'+xe(s.name)+'</b> 학생의 '+curTerm+'기 수업이 완료되었습니다!</div>';
+  h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:11px;padding:11px 14px;margin-bottom:14px;text-align:center">';
+  h+='<div style="font-size:12px;color:#6B7280;margin-bottom:3px">다음 기수</div>';
+  h+='<div style="font-size:22px;font-weight:800;color:#4338CA">📚 '+nextTerm+'기 시작</div>';
+  h+='<div style="font-size:11px;color:#6B7280;margin-top:3px">수업 회차가 1회부터 새로 시작됩니다</div>';
+  h+='</div>';
+  h+='<div style="background:#F3F4F6;border-radius:11px;padding:13px;margin-bottom:16px">';
+  h+='<label class="lbl">'+nextTerm+'기 수업 횟수</label>';
+  h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="10" min="1" max="200" style="font-size:20px;font-weight:700;text-align:center">';
+  h+='</div>';
+  h+='<div style="display:flex;gap:9px">';
+  h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
+  h+='<button class="bp" onclick="doAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+nextTerm+'기 시작하기</button>';
+  h+='</div></div></div>';
+  return h;
+}
+
+function dlPanelHtml(){
+  return '<div class="dl-panel"><div class="dl-panel-hd"><span style="font-size:17px">📥</span><span style="font-weight:800;color:#065F46;font-size:14px">데이터 내보내기</span></div><div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;gap:8px"><button class="dl-btn" style="flex:1" onclick="downloadStudentInfo()">👥 학생정보 저장</button><button class="dl-btn" style="flex:1;background:linear-gradient(135deg,#7C3AED,#6D28D9)" onclick="downloadAllNotes()">📝 수업메모 저장</button></div><div style="font-size:11px;color:#9CA3AF;text-align:center">엑셀(CSV)로 저장됩니다.</div></div></div>';
 }
 
 /* ══ 메인 렌더 ══ */
 function R(){
   var app=document.getElementById('app'),sb=document.getElementById('SRCH_BOX');
   if(!G.user){if(sb)sb.style.display='none';app.innerHTML=vLogin();return;}
-  if(sb)sb.style.display=(G.view==='srch'&&G.view!=='det')?'block':'none';
+  if(sb)sb.style.display=(G.view==='srch')?'block':'none';
   var toast=G.notif?'<div class="toast"><span style="font-size:22px">🔔</span><div style="flex:1;font-size:13px">'+xe(G.notif)+'</div><button onclick="G.notif=null;R()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;opacity:.7">✕</button></div>':'';
   var body='';
   if(!G.admin)body+='<div class="ibanner"><span style="font-size:17px">✏️</span><div><div style="font-weight:700;color:#065F46;font-size:13px">강사 모드</div><div style="font-size:11px;color:#047857">수업 진행·메모 작성/수정/삭제 가능</div></div></div>';
-
-  if(G.admin&&G.assignView){
-    body+=vAssign();
-  } else if(G.view==='det'&&G.sid){
-    body+=vDetail();
-  } else {
+  if(G.view==='det'&&G.sid){body+=vDetail();}
+  else if(G.view==='assign'&&G.admin){body+=vAssign();}
+  else{
     body+=vTabs();
-    if(G.view==='quit'){
-      body+=vQuit();
-    } else {
+    if(G.view==='quit'&&G.admin){body+=vQuit();}
+    else{
       body+=alertPanelHtml();
-      /* ★ 원장님만 다운로드 패널 표시 */
       if(G.admin)body+=dlPanelHtml();
       if(G.view==='sch')body+=vSchedule();
       else if(G.view==='all')body+=vAll();
     }
   }
-
   app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
     +(G.form&&G.admin?vForm():'')
     +(G.showAddLesson&&G.addLessonSid?vAddLessonModal():'');
-
   if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta)ta.focus();}
 }
-
-/* ══ 담당배정 기능 ══ */
-function emailToKey(email){return email.replace(/[.]/g,'_').replace(/[@]/g,'__');}
-function keyToEmail(key){return key.replace(/__/g,'@').replace(/[_]/g,'.');}
-
-/* 강사 목록 (원장 제외) */
-var TEACHER_EMAILS=['letter4340@naver.com','novica18@naver.com'];
-
-function getAssigned(email){
-  var key=emailToKey(email);
-  return G.assignData[key]||{};
-}
-function toggleAssign(teacherEmail,stuId){
-  var key=emailToKey(teacherEmail);
-  if(!G.assignData[key])G.assignData[key]={};
-  var cur=G.assignData[key];
-  if(cur[stuId]){
-    delete G.assignData[key][stuId];
-    db.ref('assign/'+key+'/'+stuId).remove();
-  } else {
-    G.assignData[key][stuId]=true;
-    db.ref('assign/'+key+'/'+stuId).set(true);
-  }
-  /* 배정화면 체크박스 상태만 즉시 업데이트 */
-  var el=document.getElementById('chk_'+key+'_'+stuId);
-  var lbl=document.getElementById('lbl_'+key+'_'+stuId);
-  var ico=document.getElementById('ico_'+key+'_'+stuId);
-  var cnt=document.getElementById('cnt_'+key);
-  if(el)el.checked=!!G.assignData[key][stuId];
-  if(lbl){lbl.style.background=G.assignData[key][stuId]?'#EEF2FF':'#F9FAFB';lbl.style.borderColor=G.assignData[key][stuId]?'#818CF8':'#E5E7EB';}
-  if(ico)ico.textContent=G.assignData[key][stuId]?'✅':'⬜';
-  if(cnt){var c=Object.keys(G.assignData[key]||{}).length;cnt.textContent='배정된 학생: '+c+'명 / 전체 '+objArr(G.stuData).length+'명';}
-}
-function assignAll(teacherEmail){
-  var key=emailToKey(teacherEmail);
-  var all=objArr(G.stuData),upd={},i;
-  for(i=0;i<all.length;i++)upd[all[i].id]=true;
-  G.assignData[key]=upd;
-  db.ref('assign/'+key).set(upd);
-  R();
-  showToast('✅ 전체 학생이 배정되었습니다.');
-}
-function assignNone(teacherEmail){
-  var key=emailToKey(teacherEmail);
-  G.assignData[key]={};
-  db.ref('assign/'+key).remove();
-  R();
-  showToast('🗑️ 배정이 모두 해제되었습니다.');
-}
-
-/* ══ 담당배정 화면 ══ */
-function vAssign(){
-  var h='',ti,email,assigned,all=objArr(G.stuData),i,s,checked;
-  h+='<div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:2px solid #818CF8;border-radius:14px;padding:12px 14px;margin-bottom:14px">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-  h+='<span style="font-weight:800;font-size:16px;color:#1E1B4B">⚙️ 담당 학생 배정</span>';
-  h+='<button onclick="G.assignView=false;R()" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-weight:800;font-size:14px;cursor:pointer">✅ 확인 완료</button>';
-  h+='</div>';
-  h+='<div style="font-size:12px;color:#4338CA">체크박스 선택 즉시 자동 저장됩니다. 완료 후 확인 완료 버튼을 누르세요.</div>';
-  h+='</div>';
-
-  if(!all.length){
-    h+='<div class="empty"><div style="font-size:30px">📭</div><p style="font-size:13px">등록된 학생이 없습니다</p></div>';
-    return h;
-  }
-
-  for(ti=0;ti<TEACHER_EMAILS.length;ti++){
-    email=TEACHER_EMAILS[ti];
-    assigned=getAssigned(email);
-    var assignedCount=Object.keys(assigned).length;
-
-    h+='<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.07)">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">';
-    h+='<div>';
-    h+='<div style="font-weight:800;font-size:15px;color:#111827">👤 '+email+'</div>';
-    h+='<div id="cnt_'+emailToKey(email)+'" style="font-size:12px;color:#6B7280;margin-top:2px">배정된 학생: <b style="color:#4338CA">'+assignedCount+'명</b> / 전체 '+all.length+'명</div>';
-    h+='</div>';
-    h+='<div style="display:flex;gap:6px">';
-    h+='<button onclick="doAction(event)" data-action="assignAll" data-email="'+email+'" style="background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체선택</button>';
-    h+='<button onclick="doAction(event)" data-action="assignNone" data-email="'+email+'" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체해제</button>';
-    h+='</div></div>';
-
-    /* 학생 목록 체크박스 */
-    h+='<div style="display:flex;flex-direction:column;gap:6px">';
-    /* 등급별 정렬 */
-    var sorted=all.slice().sort(function(a,b){
-      var lo={'선수':0,'상급':1,'중급':2,'기타':3};
-      return (lo[a.level||'기타']||3)-(lo[b.level||'기타']||3)||a.name.localeCompare(b.name);
-    });
-    for(i=0;i<sorted.length;i++){
-      s=sorted[i];
-      checked=!!assigned[s.id];
-      var dayList=s.days?s.days.split(','):[s.day||'월'];
-      var dc2=LEVEL_STYLE[s.level||'기타']||LEVEL_STYLE['기타'];
-      h+='<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:'+(checked?'#EEF2FF':'#F9FAFB')+';border:2px solid '+(checked?'#818CF8':'#E5E7EB')+';border-radius:10px;cursor:pointer">';
-      h+='<input type="checkbox" '+(checked?'checked':'')+' onchange="doAction(event)" data-action="toggleAssign" data-email='+JSON.stringify(email)+' data-id='+JSON.stringify(s.id)+' style="width:18px;height:18px;cursor:pointer;accent-color:#6366F1">';
-      h+='<div style="flex:1;min-width:0">';
-      h+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">';
-      h+='<span style="font-weight:700;font-size:14px;color:#111827">'+xe(s.name)+'</span>';
-      if(s.level&&s.level!=='기타')h+='<span style="font-size:10px;color:'+dc2.tx+';background:'+dc2.bg+';border:1px solid '+dc2.bd+';border-radius:4px;padding:1px 5px;font-weight:700">'+dc2.icon+' '+s.level+'</span>';
-      h+='<span style="font-size:10px;color:#9CA3AF">'+dayList.join('·')+' '+s.time+'</span>';
-      h+='</div>';
-      if(s.birthdate)h+='<div style="font-size:11px;color:#9CA3AF">'+xe(s.birthdate)+'</div>';
-      h+='</div>';
-      h+='<span id="ico_'+ekey+'_'+s.id+'" style="font-size:18px">'+(checked?'✅':'⬜')+'</span>';
-      h+='</label>';
-    }
-    h+='</div></div>';
-  }
-  return h;
-}
-
 
 auth.onAuthStateChanged(function(user){
   if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();}
   else{
-    G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};G.assignData={};G.assignView=false;
-    if(_noteListener){
-      db.ref('students/'+_noteListener+'/notes').off();
-      db.ref('quit_students/'+_noteListener+'/notes').off();
-      _noteListener=null;
-    }
-    db.ref('students').off();
-    db.ref('quit_students').off();
-    db.ref('assign').off();
-    R();
+    G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};G.assignData={};G.assignView=false;G.assignTeacher=null;
+    if(_noteListener){db.ref('students/'+_noteListener+'/notes').off();db.ref('quit_students/'+_noteListener+'/notes').off();_noteListener=null;}
+    db.ref('students').off();db.ref('quit_students').off();db.ref('assign').off();R();
   }
 });
 </script>

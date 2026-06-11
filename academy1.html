@@ -189,7 +189,7 @@ function startListen(){
   /* 담당배정 리스너 */
   db.ref('assign').on('value',function(snap){
     G.assignData=snap.val()||{};
-    safeR();
+    if(!G.assignView)safeR(); /* 배정화면 열려있을 땐 갱신 안함 */
   });
   /* 그만둔 학생 리스너 */
   db.ref('quit_students').on('value',function(snap){
@@ -879,32 +879,51 @@ function getAssigned(email){
 }
 function toggleAssign(teacherEmail,stuId){
   var key=emailToKey(teacherEmail);
-  var cur=G.assignData[key]||{};
+  if(!G.assignData[key])G.assignData[key]={};
+  var cur=G.assignData[key];
   if(cur[stuId]){
+    delete G.assignData[key][stuId];
     db.ref('assign/'+key+'/'+stuId).remove();
   } else {
+    G.assignData[key][stuId]=true;
     db.ref('assign/'+key+'/'+stuId).set(true);
   }
+  /* 배정화면 체크박스 상태만 즉시 업데이트 */
+  var el=document.getElementById('chk_'+key+'_'+stuId);
+  var lbl=document.getElementById('lbl_'+key+'_'+stuId);
+  var ico=document.getElementById('ico_'+key+'_'+stuId);
+  var cnt=document.getElementById('cnt_'+key);
+  if(el)el.checked=!!G.assignData[key][stuId];
+  if(lbl){lbl.style.background=G.assignData[key][stuId]?'#EEF2FF':'#F9FAFB';lbl.style.borderColor=G.assignData[key][stuId]?'#818CF8':'#E5E7EB';}
+  if(ico)ico.textContent=G.assignData[key][stuId]?'✅':'⬜';
+  if(cnt){var c=Object.keys(G.assignData[key]||{}).length;cnt.textContent='배정된 학생: '+c+'명 / 전체 '+objArr(G.stuData).length+'명';}
 }
 function assignAll(teacherEmail){
   var key=emailToKey(teacherEmail);
   var all=objArr(G.stuData),upd={},i;
   for(i=0;i<all.length;i++)upd[all[i].id]=true;
+  G.assignData[key]=upd;
   db.ref('assign/'+key).set(upd);
+  R();
   showToast('✅ 전체 학생이 배정되었습니다.');
 }
 function assignNone(teacherEmail){
   var key=emailToKey(teacherEmail);
+  G.assignData[key]={};
   db.ref('assign/'+key).remove();
+  R();
   showToast('🗑️ 배정이 모두 해제되었습니다.');
 }
 
 /* ══ 담당배정 화면 ══ */
 function vAssign(){
   var h='',ti,email,assigned,all=objArr(G.stuData),i,s,checked;
-  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">';
-  h+='<button onclick="G.assignView=false;R()" style="background:none;border:none;color:#6366F1;font-weight:700;cursor:pointer;font-size:14px">← 돌아가기</button>';
-  h+='<span style="font-weight:800;font-size:16px;color:#111827">⚙️ 담당 학생 배정</span>';
+  h+='<div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:2px solid #818CF8;border-radius:14px;padding:12px 14px;margin-bottom:14px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<span style="font-weight:800;font-size:16px;color:#1E1B4B">⚙️ 담당 학생 배정</span>';
+  h+='<button onclick="G.assignView=false;R()" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-weight:800;font-size:14px;cursor:pointer">✅ 확인 완료</button>';
+  h+='</div>';
+  h+='<div style="font-size:12px;color:#4338CA">체크박스 선택 즉시 자동 저장됩니다. 완료 후 확인 완료 버튼을 누르세요.</div>';
   h+='</div>';
 
   if(!all.length){
@@ -921,7 +940,7 @@ function vAssign(){
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">';
     h+='<div>';
     h+='<div style="font-weight:800;font-size:15px;color:#111827">👤 '+email+'</div>';
-    h+='<div style="font-size:12px;color:#6B7280;margin-top:2px">배정된 학생: <b style="color:#4338CA">'+assignedCount+'명</b> / 전체 '+all.length+'명</div>';
+    h+='<div id="cnt_'+emailToKey(email)+'" style="font-size:12px;color:#6B7280;margin-top:2px">배정된 학생: <b style="color:#4338CA">'+assignedCount+'명</b> / 전체 '+all.length+'명</div>';
     h+='</div>';
     h+='<div style="display:flex;gap:6px">';
     h+='<button onclick="assignAll(\''+email+'\')" style="background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체선택</button>';
@@ -950,7 +969,7 @@ function vAssign(){
       h+='</div>';
       if(s.birthdate)h+='<div style="font-size:11px;color:#9CA3AF">'+xe(s.birthdate)+'</div>';
       h+='</div>';
-      h+='<span style="font-size:18px">'+(checked?'✅':'⬜')+'</span>';
+      h+='<span id="ico_'+ekey+'_'+s.id+'" style="font-size:18px">'+(checked?'✅':'⬜')+'</span>';
       h+='</label>';
     }
     h+='</div></div>';

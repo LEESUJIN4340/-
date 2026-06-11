@@ -298,20 +298,24 @@ function toggleAssign(stuId){
   if(!G.assignData[key])G.assignData[key]={};
   if(G.assignData[key][stuId]===true){
     delete G.assignData[key][stuId];
-    db.ref('assign/'+key+'/'+stuId).remove();
+    db.ref('assign/'+key+'/'+stuId).remove()
+      .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
   } else {
     G.assignData[key][stuId]=true;
-    db.ref('assign/'+key+'/'+stuId).set(true);
+    db.ref('assign/'+key+'/'+stuId).set(true)
+      .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
   }
-  R(); /* 즉시 화면 갱신 */
+  R();
 }
 function assignAll(){
   var key=eKey(G.assignTeacher);
   var all=objArr(G.stuData),upd={},i;
   for(i=0;i<all.length;i++)upd[all[i].id]=true;
   G.assignData[key]=upd;
-  db.ref('assign/'+key).set(upd);
-  R();showToast('✅ 전체 학생이 배정되었습니다.');
+  db.ref('assign/'+key).set(upd)
+    .then(function(){showToast('✅ 전체 학생이 배정되었습니다.');})
+    .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
+  R();
 }
 function assignNone(){
   var key=eKey(G.assignTeacher);

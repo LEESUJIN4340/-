@@ -86,6 +86,7 @@ var ACAD_NAME="생각키움장기학원";
 var DAYS=['월','화','수','목','금','토','일'];
 var DC={월:{bg:'#EEF2FF',tx:'#4338CA',bd:'#818CF8'},화:{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C'},수:{bg:'#F0FDF4',tx:'#15803D',bd:'#4ADE80'},목:{bg:'#FDF4FF',tx:'#7E22CE',bd:'#C084FC'},금:{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185'},토:{bg:'#F0F9FF',tx:'#0369A1',bd:'#38BDF8'},일:{bg:'#FEF9C3',tx:'#854D0E',bd:'#FACC15'}};
 var TIMES=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+var TEACHERS=['letter4340@naver.com','novica18@naver.com','lsoojin99@hanmail.net'];
 var LO={선수:0,상급:1,중급:2,기타:3};
 var LS={선수:{bg:'#FFF1F2',tx:'#BE123C',bd:'#FB7185',icon:'🥇'},상급:{bg:'#FFF7ED',tx:'#C2410C',bd:'#FB923C',icon:'🥈'},중급:{bg:'#ECFDF5',tx:'#065F46',bd:'#34D399',icon:'🥉'},기타:{bg:'#F3F4F6',tx:'#374151',bd:'#9CA3AF',icon:'📚'}};
 
@@ -96,7 +97,7 @@ var G={
   view:'sch', prevView:'sch', selDay:'월', sid:null,
   notif:null, form:false, esid:null, fdays:['월'], enid:null,
   showAddLesson:false, addLessonSid:null,
-  assignView:false, assignTeacher:null  /* 배정 화면용 */
+  assignTeacher:null  /* 배정 선택된 강사 */
 };
 var _saving=false,_ime=false,_pend=false,_noteListener=null;
 
@@ -177,7 +178,9 @@ function startListen(){
   });
   db.ref('assign').on('value',function(snap){
     G.assignData=snap.val()||{};
-    safeR();
+    /* assign 화면 열려있으면 화면만 갱신, 아니면 safeR */
+    if(G.view==='assign')R();
+    else safeR();
   });
 }
 
@@ -288,27 +291,31 @@ function delNote(sid,nid){
 }
 
 /* ══ 담당배정 ══ */
-function openAssign(teacherEmail){G.assignView=true;G.assignTeacher=teacherEmail;R();}
-function closeAssign(){G.assignView=false;G.assignTeacher=null;R();}
+function openAssign(teacherEmail){G.prevView=G.view;G.view='assign';G.assignTeacher=teacherEmail;R();}
+function closeAssign(){G.view=G.prevView||'sch';G.assignTeacher=null;R();}
 function toggleAssign(stuId){
   var key=eKey(G.assignTeacher);
   if(!G.assignData[key])G.assignData[key]={};
   if(G.assignData[key][stuId]===true){
     delete G.assignData[key][stuId];
-    db.ref('assign/'+key+'/'+stuId).remove();
+    db.ref('assign/'+key+'/'+stuId).remove()
+      .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
   } else {
     G.assignData[key][stuId]=true;
-    db.ref('assign/'+key+'/'+stuId).set(true);
+    db.ref('assign/'+key+'/'+stuId).set(true)
+      .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
   }
-  R(); /* 즉시 화면 갱신 */
+  R();
 }
 function assignAll(){
   var key=eKey(G.assignTeacher);
   var all=objArr(G.stuData),upd={},i;
   for(i=0;i<all.length;i++)upd[all[i].id]=true;
   G.assignData[key]=upd;
-  db.ref('assign/'+key).set(upd);
-  R();showToast('✅ 전체 학생이 배정되었습니다.');
+  db.ref('assign/'+key).set(upd)
+    .then(function(){showToast('✅ 전체 학생이 배정되었습니다.');})
+    .catch(function(e){showToast('❌ 저장 실패: '+e.message);});
+  R();
 }
 function assignNone(){
   var key=eKey(G.assignTeacher);
@@ -317,7 +324,7 @@ function assignNone(){
   R();showToast('🗑️ 배정이 모두 해제되었습니다.');
 }
 function confirmAssign(){
-  G.assignView=false;G.assignTeacher=null;
+  G.view=G.prevView||'sch';G.assignTeacher=null;
   showToast('✅ 배정이 저장되었습니다!');R();
 }
 
@@ -464,7 +471,7 @@ function vHdr(){
   for(i=0;i<ss.length;i++){r=rem(ss[i]);if(r===1)ac++;else if(r<=0)dc2++;}
   var myCount=allStu().length;
   if(G.admin){
-    return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리</div></div><div style="display:flex;gap:6px"><button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button><button onclick="goView(\'assign\')" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button><button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div><div class="hstat" style="cursor:pointer" data-view="quit" onclick="goView(this.dataset.view)"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div></div></div>';
+    return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리</div></div><div style="display:flex;gap:6px"><button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button><button data-view="assign" onclick="goView(this.dataset.view)" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button><button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div><div class="hstat" style="cursor:pointer" data-view="quit" onclick="goView(this.dataset.view)"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div></div></div>';
   } else {
     return '<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="color:#A5B4FC;font-size:10px;font-weight:600;letter-spacing:2px">'+ACAD_NAME+'</div><div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리 <span style="font-size:11px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:6px;margin-left:7px">강사</span></div></div><button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button></div><div style="display:flex;gap:8px;margin-top:10px"><div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+myCount+'</div><div style="color:#A5B4FC;font-size:9px">담당 학생</div></div></div></div>';
   }
@@ -547,7 +554,6 @@ function vQuit(){
 /* ── 배정 화면 (원장 전용) ── */
 function vAssign(){
   var all=objArr(G.stuData);
-  var TEACHERS=['letter4340@naver.com','novica18@naver.com'];
   var h='';
   h+='<div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:2px solid #818CF8;border-radius:14px;padding:14px;margin-bottom:14px">';
   h+='<div style="font-size:16px;font-weight:800;color:#1E1B4B;margin-bottom:4px">⚙️ 담당 학생 배정</div>';
@@ -780,7 +786,7 @@ function R(){
 auth.onAuthStateChanged(function(user){
   if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();}
   else{
-    G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};G.assignData={};G.assignView=false;G.assignTeacher=null;
+    G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};G.assignData={};G.assignTeacher=null;
     if(_noteListener){db.ref('students/'+_noteListener+'/notes').off();db.ref('quit_students/'+_noteListener+'/notes').off();_noteListener=null;}
     db.ref('students').off();db.ref('quit_students').off();db.ref('assign').off();R();
   }

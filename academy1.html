@@ -603,7 +603,7 @@ function vHdr(){
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div>'
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div>'
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div>'
-      +'<div class="hstat" style="cursor:pointer" onclick="goView('quit')"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div>'
+      +'<div class="hstat" style="cursor:pointer" onclick="goView(\'quit\')"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div>'
       +'</div>'
     /* 강사: 담당 학생 수만 표시 */
     :'<div style="display:flex;gap:8px;margin-top:10px">'
@@ -924,8 +924,8 @@ function vAssign(){
     h+='<div style="font-size:12px;color:#6B7280;margin-top:2px">배정된 학생: <b style="color:#4338CA">'+assignedCount+'명</b> / 전체 '+all.length+'명</div>';
     h+='</div>';
     h+='<div style="display:flex;gap:6px">';
-    h+='<button onclick="assignAll(''+email+'')" style="background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체선택</button>';
-    h+='<button onclick="assignNone(''+email+'')" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체해제</button>';
+    h+='<button onclick="assignAll(\''+email+'\')" style="background:#EEF2FF;color:#4338CA;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체선택</button>';
+    h+='<button onclick="assignNone(\''+email+'\')" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">전체해제</button>';
     h+='</div></div>';
 
     /* 학생 목록 체크박스 */
@@ -941,7 +941,7 @@ function vAssign(){
       var dayList=s.days?s.days.split(','):[s.day||'월'];
       var dc2=LEVEL_STYLE[s.level||'기타']||LEVEL_STYLE['기타'];
       h+='<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:'+(checked?'#EEF2FF':'#F9FAFB')+';border:2px solid '+(checked?'#818CF8':'#E5E7EB')+';border-radius:10px;cursor:pointer">';
-      h+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssign(''+email+'',''+s.id+'')" style="width:18px;height:18px;cursor:pointer;accent-color:#6366F1">';
+      h+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssign(\''+email+'\'\',\''+s.id+'\')" style="width:18px;height:18px;cursor:pointer;accent-color:#6366F1">';
       h+='<div style="flex:1;min-width:0">';
       h+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">';
       h+='<span style="font-weight:700;font-size:14px;color:#111827">'+xe(s.name)+'</span>';

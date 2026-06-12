@@ -749,10 +749,20 @@ function vDetail(){
   if(r<=0&&!isQuit)h+='<div style="margin-top:10px;background:#EEF2FF;border:1px solid #818CF8;border-radius:8px;padding:8px 12px;font-size:13px;color:#4338CA;font-weight:700">✅ 모든 수업 완료! 수업 추가 또는 퇴원 처리 하세요.</div>';
   h+='</div>';
   if(!isQuit){
-    h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
-    h+='<button class="bp" style="flex:2" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">'+(r<=0?'🔄 수업 횟수 추가':'+ 수업 진행 (기록 추가)')+'</button>';
-    if(r>0)h+='<button onclick="openAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:1;background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:12px;padding:12px 8px;font-weight:700;font-size:13px;cursor:pointer">➕ 횟수<br>추가</button>';
-    h+='</div>';
+    if(G.admin){
+      /* 원장: 수업 진행 + 횟수 추가/삭제 모두 가능 */
+      h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+      h+='<button class="bp" style="flex:2" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">'+(r<=0?'🔄 수업 횟수 추가':'+ 수업 진행 (기록 추가)')+'</button>';
+      h+='<button onclick="openAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:1;background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:12px;padding:12px 8px;font-weight:700;font-size:13px;cursor:pointer">➕ 횟수<br>관리</button>';
+      h+='</div>';
+    } else {
+      /* 강사: 수업 진행(기록 추가)만 가능, 횟수 추가 불가 */
+      if(r>0){
+        h+='<button class="bp" style="margin-bottom:10px" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">+ 수업 진행 (기록 추가)</button>';
+      } else {
+        h+='<div style="background:#FEF3C7;border:2px solid #FCD34D;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#92400E;font-weight:600">✅ 모든 수업이 완료되었습니다.<br><span style="font-size:11px;font-weight:400">수업 횟수 추가는 원장에게 문의하세요.</span></div>';
+      }
+    }
   }
   /* 리체스 정보 */
   if(s.lichessId||s.lichessPw){
@@ -779,7 +789,7 @@ function vDetail(){
       h+='<div style="display:flex;gap:6px;align-items:center"><span style="background:#EEF2FF;color:#4338CA;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:700">'+(curTermN>1?curTermN+'기 ':'')+''+(n.lessonNum||0)+'회차</span><span style="font-size:11px;color:#9CA3AF">'+xe(n.date||'')+'</span></div>';
       h+='<div style="display:flex;gap:5px">';
       if(!isQuit)h+='<button onclick="G.enid=this.dataset.nid;R()" data-nid="'+xe(n.id)+'" style="padding:3px 9px;font-size:11px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;cursor:pointer">✏️ 메모</button>';
-      if(G.admin)h+='<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(this.dataset.sid,this.dataset.nid)" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'">삭제</button>';
+      if(!isQuit)h+='<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(this.dataset.sid,this.dataset.nid)" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'">삭제</button>';
       h+='</div></div>';
       if(G.enid===n.id){
         h+='<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea>';

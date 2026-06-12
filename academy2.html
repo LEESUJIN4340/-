@@ -205,6 +205,8 @@ function saveStu(){
   obj.totalLessons=parseInt((document.getElementById('F_TOTAL')||{}).value)||10;
   obj.usedLessons=parseInt((document.getElementById('F_USED')||{}).value)||0;
   obj.level=(document.getElementById('F_LEVEL')||{}).value||'기타';
+  obj.lichessId=(document.getElementById('F_LICHESS_ID')||{}).value||'';
+  obj.lichessPw=(document.getElementById('F_LICHESS_PW')||{}).value||'';
   obj.notified=ex.notified||false;obj.createdAt=ex.createdAt||new Date().toISOString();
   db.ref('students/'+id).update(obj)
     .then(function(){_saving=false;G.form=false;G.esid=null;showToast('저장되었습니다.');})
@@ -244,17 +246,69 @@ function delQuitStu(id){
   if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
   db.ref('quit_students/'+id).remove();G.sid=null;G.view='quit';G.curNotes={};R();
 }
+
+
+/* 프리셋 버튼 */
+function setPreset(elId,val){
+  var el=document.getElementById(elId);if(el)el.value=val;
+}
+/* ══ 수업 횟수 탭 전환 ══ */
+function switchAddTab(tab){
+  var panAdd=document.getElementById('PANEL_ADD');
+  var panDel=document.getElementById('PANEL_DEL');
+  var btnAdd=document.getElementById('TAB_ADD');
+  var btnDel=document.getElementById('TAB_DEL');
+  if(!panAdd||!panDel)return;
+  if(tab==='add'){
+    panAdd.style.display='block';panDel.style.display='none';
+    btnAdd.style.background='#6366F1';btnAdd.style.color='#fff';
+    btnDel.style.background='#F3F4F6';btnDel.style.color='#6B7280';
+  } else {
+    panAdd.style.display='none';panDel.style.display='block';
+    btnDel.style.background='#DC2626';btnDel.style.color='#fff';
+    btnAdd.style.background='#F3F4F6';btnAdd.style.color='#6B7280';
+  }
+}
+
+/* ══ 수업 횟수 삭제 ══ */
+function doDelLesson(sid){
+  var delEl=document.getElementById('DEL_LESSON_CNT');
+  var del=parseInt(delEl?delEl.value:2)||2;
+  if(del<1||del>200){alert('1~200 사이로 입력해 주세요.');return;}
+  var s=stuById(sid);if(!s)return;
+  var newTotal=(+s.totalLessons||0)-del;
+  if(newTotal<(+s.usedLessons||0)){
+    alert('이미 진행한 수업('+s.usedLessons+'회)보다 적게 만들 수 없습니다.\n최대 '+(+s.totalLessons-(+s.usedLessons||0))+'회까지 삭제 가능합니다.');
+    return;
+  }
+  if(newTotal<1){alert('총 수업 횟수는 최소 1회 이상이어야 합니다.');return;}
+  if(!confirm(del+'회를 삭제하시겠습니까? ('+s.totalLessons+'회 → '+newTotal+'회)'))return;
+  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+  G.showAddLesson=false;G.addLessonSid=null;
+  showToast(del+'회 삭제되었습니다. 총 '+newTotal+'회');
+}
+
 function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
 function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
 function doAddLesson(sid){
   var addEl=document.getElementById('ADD_LESSON_CNT');
-  var add=parseInt(addEl?addEl.value:10)||10;
+  var add=parseInt(addEl?addEl.value:4)||4;
   if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  var newTerm=(+s.term||1)+1;
-  db.ref('students/'+sid).update({totalLessons:add,usedLessons:0,term:newTerm,notified:false});
-  G.showAddLesson=false;G.addLessonSid=null;
-  showToast(newTerm+'기 시작! '+add+'회 등록되었습니다.');
+  var r=rem(s);
+  if(r<=0){
+    /* 수업 완료 → 새 기수 시작 */
+    var newTerm=(+s.term||1)+1;
+    db.ref('students/'+sid).update({totalLessons:add,usedLessons:0,term:newTerm,notified:false});
+    G.showAddLesson=false;G.addLessonSid=null;
+    showToast(newTerm+'기 시작! '+add+'회 등록되었습니다.');
+  } else {
+    /* 수업 진행중 → 현재 기수에 횟수만 추가 */
+    var newTotal=(+s.totalLessons||0)+add;
+    db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+    G.showAddLesson=false;G.addLessonSid=null;
+    showToast(add+'회 추가되었습니다. 총 '+newTotal+'회');
+  }
 }
 function addLesson(sid){
   var s=stuById(sid);if(!s)return;
@@ -695,7 +749,19 @@ function vDetail(){
   if(r<=0&&!isQuit)h+='<div style="margin-top:10px;background:#EEF2FF;border:1px solid #818CF8;border-radius:8px;padding:8px 12px;font-size:13px;color:#4338CA;font-weight:700">✅ 모든 수업 완료! 수업 추가 또는 퇴원 처리 하세요.</div>';
   h+='</div>';
   if(!isQuit){
-    h+='<button class="bp" style="margin-bottom:10px" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">'+(r<=0?'🔄 수업 횟수 추가하기':'+ 수업 진행 (기록 추가)')+'</button>';
+    h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+    h+='<button class="bp" style="flex:2" onclick="addLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'">'+(r<=0?'🔄 수업 횟수 추가':'+ 수업 진행 (기록 추가)')+'</button>';
+    if(r>0)h+='<button onclick="openAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:1;background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:12px;padding:12px 8px;font-weight:700;font-size:13px;cursor:pointer">➕ 횟수<br>추가</button>';
+    h+='</div>';
+  }
+  /* 리체스 정보 */
+  if(s.lichessId||s.lichessPw){
+    h+='<div style="background:#F0F9FF;border:2px solid #38BDF8;border-radius:12px;padding:11px 14px;margin-bottom:10px">';
+    h+='<div style="font-size:12px;font-weight:700;color:#0369A1;margin-bottom:6px">♟️ 리체스 계정</div>';
+    h+='<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    if(s.lichessId)h+='<div style="font-size:13px;color:#374151">아이디: <b style="color:#0369A1">'+xe(s.lichessId)+'</b></div>';
+    if(s.lichessPw)h+='<div style="font-size:13px;color:#374151">비번: <b style="color:#0369A1">'+xe(s.lichessPw)+'</b></div>';
+    h+='</div></div>';
   }
   h+='<button class="dl-btn" onclick="downloadStudentNotes(this.dataset.sid)" data-sid="'+xe(s.id)+'">📥 이 학생 수업메모 저장</button>';
   h+='<div style="height:10px"></div>';
@@ -754,6 +820,12 @@ function vForm(){
     h+='<button type="button" id="FLVBTN_'+lvn+'" onclick="setFlevel(this.dataset.lv)" data-lv="'+lvn+'" style="'+(lvon2?'background:'+lvst2.bg+';border:2px solid '+lvst2.bd+';color:'+lvst2.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer">'+lvst2.icon+' '+lvn+'</button>';
   }
   h+='</div><input type="hidden" id="F_LEVEL" value="'+curLv+'">';
+  /* 리체스 계정 */
+  h+='<div style="background:#F0F9FF;border:2px solid #BAE6FD;border-radius:12px;padding:12px 14px;margin-bottom:14px">';
+  h+='<div style="font-size:13px;font-weight:700;color:#0369A1;margin-bottom:10px">♟️ 리체스 계정 (선택)</div>';
+  h+='<label class="lbl">아이디</label><input class="fi" type="text" id="F_LICHESS_ID" value="'+xe(s?s.lichessId||'':'')+'" placeholder="리체스 아이디" style="margin-bottom:10px">';
+  h+='<label class="lbl">비밀번호</label><input class="fi" type="text" id="F_LICHESS_PW" value="'+xe(s?s.lichessPw||'':'')+'" placeholder="리체스 비밀번호">';
+  h+='</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px">';
   h+='<div><label class="lbl">총 수업 횟수</label><input class="fi" type="number" id="F_TOTAL" min="1" value="'+(s?s.totalLessons:10)+'"></div>';
   h+='<div><label class="lbl">진행한 횟수</label><input class="fi" type="number" id="F_USED" min="0" value="'+(s?s.usedLessons:0)+'"></div>';
@@ -763,24 +835,54 @@ function vForm(){
 }
 function vAddLessonModal(){
   var s=stuById(G.addLessonSid);if(!s)return'';
-  var curTerm=+s.term||1,nextTerm=curTerm+1,h='';
+  var curTerm=+s.term||1,nextTerm=curTerm+1,r=rem(s),h='';
   h='<div class="lesson-modal"><div class="lesson-modal-c">';
-  h+='<div style="text-align:center;font-size:26px;margin-bottom:8px">🔄</div>';
-  h+='<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">새 기수 수업 추가</div>';
-  h+='<div style="font-size:13px;color:#6B7280;text-align:center;margin-bottom:14px"><b>'+xe(s.name)+'</b> 학생의 '+curTerm+'기 수업이 완료되었습니다!</div>';
-  h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:11px;padding:11px 14px;margin-bottom:14px;text-align:center">';
-  h+='<div style="font-size:12px;color:#6B7280;margin-bottom:3px">다음 기수</div>';
-  h+='<div style="font-size:22px;font-weight:800;color:#4338CA">📚 '+nextTerm+'기 시작</div>';
-  h+='<div style="font-size:11px;color:#6B7280;margin-top:3px">수업 회차가 1회부터 새로 시작됩니다</div></div>';
-  h+='<div style="background:#F3F4F6;border-radius:11px;padding:13px;margin-bottom:16px">';
-  h+='<label class="lbl">'+nextTerm+'기 수업 횟수</label>';
-  h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="10" min="1" max="200" style="font-size:20px;font-weight:700;text-align:center"></div>';
+  h+='<div style="text-align:center;font-size:26px;margin-bottom:8px">'+(r<=0?'🔄':'➕')+'</div>';
+  h+='<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">수업 횟수 관리</div>';
+  h+='<div style="background:#F3F4F6;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;font-size:13px;color:#374151">';
+  h+='<b>'+xe(s.name)+'</b> · '+curTerm+'기 · '+s.usedLessons+'/'+s.totalLessons+'회 ('+r+'회 남음)</div>';
+  /* 탭 버튼 */
+  h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
+  h+='<button id="TAB_ADD" data-tab="add" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:9px;border-radius:10px;background:#6366F1;color:#fff;border:none;font-weight:700;font-size:13px;cursor:pointer">➕ 횟수 추가</button>';
+  h+='<button id="TAB_DEL" data-tab="del" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:9px;border-radius:10px;background:#F3F4F6;color:#6B7280;border:none;font-weight:700;font-size:13px;cursor:pointer">➖ 횟수 삭제</button>';
+  h+='</div>';
+  /* 추가 패널 */
+  h+='<div id="PANEL_ADD">';
+  if(r<=0){
+    h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:11px;padding:10px 14px;margin-bottom:12px;text-align:center">';
+    h+='<div style="font-size:12px;color:#6B7280;margin-bottom:2px">새 기수로 시작</div>';
+    h+='<div style="font-size:18px;font-weight:800;color:#4338CA">📚 '+nextTerm+'기 - 1회부터 새로 시작</div></div>';
+  }
+  h+='<label class="lbl">추가할 수업 횟수</label>';
+  h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="4" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
+  h+='<div style="display:flex;gap:6px;margin-bottom:14px">';
+  var presets=[1,2,3,4,5,6,7,8,9,10,11,12],pi;
+  for(pi=0;pi<presets.length;pi++){
+    h+='<button data-n="'+presets[pi]+'" data-elid="ADD_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:6px 0;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;font-size:13px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
+  }
+  h+='</div>';
   h+='<div style="display:flex;gap:9px">';
   h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
-  h+='<button class="bp" onclick="doAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+nextTerm+'기 시작하기</button>';
-  h+='</div></div></div>';
+  h+='<button class="bp" onclick="doAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+(r<=0?nextTerm+'기 시작':'횟수 추가')+'</button>';
+  h+='</div></div>';
+  /* 삭제 패널 */
+  h+='<div id="PANEL_DEL" style="display:none">';
+  h+='<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#DC2626">⚠️ 총 수업 횟수에서 삭제됩니다. 이미 진행한 수업보다 적게 만들 수 없습니다.</div>';
+  h+='<label class="lbl">삭제할 수업 횟수</label>';
+  h+='<input class="fi" type="number" id="DEL_LESSON_CNT" value="2" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
+  h+='<div style="display:flex;gap:6px;margin-bottom:14px">';
+  for(pi=0;pi<presets.length;pi++){
+    h+='<button data-n="'+presets[pi]+'" data-elid="DEL_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:6px 0;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;font-size:13px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
+  }
+  h+='</div>';
+  h+='<div style="display:flex;gap:9px">';
+  h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
+  h+='<button onclick="doDelLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;padding:12px;border-radius:12px;background:#DC2626;color:#fff;border:none;font-weight:800;font-size:15px;cursor:pointer">➖ 횟수 삭제</button>';
+  h+='</div></div>';
+  h+='</div></div>';
   return h;
 }
+
 function dlPanelHtml(){
   return '<div class="dl-panel"><div class="dl-panel-hd"><span style="font-size:17px">📥</span><span style="font-weight:800;color:#065F46;font-size:14px">데이터 내보내기</span></div>'
     +'<div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px">'

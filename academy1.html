@@ -119,7 +119,22 @@ function objArr(obj){
 function noteArr(obj){
   var r=[],keys,i,k,n,copy,p;if(!obj)return r;keys=Object.keys(obj);
   for(i=0;i<keys.length;i++){k=keys[i];n=obj[k];copy={};for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}copy.id=copy.id||k;r.push(copy);}
-  return r.sort(function(a,b){var ta=+a.term||1,tb=+b.term||1;return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
+  return r.sort(function(a,b){
+    var ta=+a.term||1,tb=+b.term||1;
+    if(ta!==tb)return ta-tb;
+    /* 날짜 파싱 함수 */
+    function parseDate(n){
+      /* dateRaw: yyyy-mm-dd 형식 우선 */
+      if(n.dateRaw)return new Date(n.dateRaw);
+      var s=n.date||'';
+      var m=s.replace(/[.]/g,'').trim().split(/\s+/);
+      if(m.length>=3)return new Date(+m[0],+m[1]-1,+m[2]);
+      return new Date(0);
+    }
+    var diff=parseDate(a)-parseDate(b);
+    if(diff!==0)return diff;
+    return (+a.lessonNum||0)-(+b.lessonNum||0);
+  });
 }
 function allStu(){
   var all=objArr(G.stuData);
@@ -314,21 +329,35 @@ function addLesson(sid){
   var s=stuById(sid);if(!s)return;
   if(rem(s)<=0){openAddLesson(sid);return;}
   var term=+s.term||1;
-  var existNotes=G.curNotes||{},termCount=0,keys=Object.keys(existNotes),i,n;
-  for(i=0;i<keys.length;i++){n=existNotes[keys[i]];if((+n.term||1)===term)termCount++;}
-  var nu=termCount+1;
   var globalUsed=Math.min((+s.usedLessons||0)+1,+s.totalLessons||0);
-  var nid=uid(),upd={usedLessons:globalUsed};
-  upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
-  db.ref('students/'+sid).update(upd);
-  var r=Math.max(0,(+s.totalLessons||0)-globalUsed);
-  if(r===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
-  if(r===0)showToast(s.name+' 모든 수업 완료!');
+  var r2=Math.max(0,(+s.totalLessons||0)-globalUsed);
+  /* ★ Firebase에서 현재 기수 노트 수를 직접 읽어서 lessonNum 계산 */
+  db.ref('students/'+sid+'/notes').once('value',function(snap){
+    var notes=snap.val()||{},keys=Object.keys(notes),i,termCount=0;
+    for(i=0;i<keys.length;i++){if((+notes[keys[i]].term||1)===term)termCount++;}
+    var nu=termCount+1;
+    var nid=uid(),upd={usedLessons:globalUsed};
+    upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
+    db.ref('students/'+sid).update(upd);
+    if(r2===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
+    if(r2===0)showToast(s.name+' 모든 수업 완료!');
+  });
 }
 function saveNote(sid,nid){
   var ta=document.getElementById('NOTE_TA');if(!ta)return;
+  var dateEl=document.getElementById('NOTE_DATE_'+nid);
   var rp=G.stuData[sid]?'students':'quit_students';
-  db.ref(rp+'/'+sid+'/notes/'+nid+'/content').set(ta.value);G.enid=null;R();
+  var upd={content:ta.value};
+  if(dateEl&&dateEl.value.trim()){
+    /* 날짜 입력값을 한국어 형식으로 변환 */
+    var dv=dateEl.value.trim(); /* yyyy-mm-dd */
+    var dp=dv.split('-');
+    if(dp.length===3){
+      upd.date=dp[0]+'. '+parseInt(dp[1])+'. '+parseInt(dp[2])+'.';
+      upd.dateRaw=dv; /* 정렬용 원본 */
+    }
+  }
+  db.ref(rp+'/'+sid+'/notes/'+nid).update(upd);G.enid=null;R();
 }
 function delNote(sid,nid){
   if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
@@ -792,6 +821,18 @@ function vDetail(){
       if(!isQuit)h+='<button class="bd" style="padding:3px 9px;font-size:11px;border-radius:7px" onclick="delNote(this.dataset.sid,this.dataset.nid)" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'">삭제</button>';
       h+='</div></div>';
       if(G.enid===n.id){
+        /* 날짜 수정 입력칸 */
+        var rawDate=n.dateRaw||'';
+        if(!rawDate&&n.date){
+          /* 기존 날짜 '2026. 6. 9.' → yyyy-mm-dd 변환 */
+          var dp2=n.date.replace(/[.]/g,'').trim().split(/\s+/);
+          if(dp2.length>=3)rawDate=dp2[0]+'-'+(dp2[1].length<2?'0':'')+dp2[1]+'-'+(dp2[2].length<2?'0':'')+dp2[2];
+        }
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:10px;padding:8px 12px">';
+        h+='<span style="font-size:12px;font-weight:700;color:#0369A1;white-space:nowrap">📅 수업날짜</span>';
+        h+='<input type="date" id="NOTE_DATE_'+n.id+'" value="'+rawDate+'" style="flex:1;border:none;background:transparent;font-size:13px;color:#0369A1;font-weight:600;outline:none;cursor:pointer">';
+        h+='<span style="font-size:10px;color:#9CA3AF">수정 가능</span>';
+        h+='</div>';
         h+='<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea>';
         h+='<div style="display:flex;gap:7px;margin-top:8px">';
         h+='<button class="bp" style="flex:1;padding:9px;border-radius:10px;font-size:13px" onclick="saveNote(this.dataset.sid,this.dataset.nid)" data-sid="'+xe(s.id)+'" data-nid="'+xe(n.id)+'">저장</button>';

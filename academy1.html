@@ -346,15 +346,23 @@ function addLesson(sid){
 function saveNote(sid,nid){
   var ta=document.getElementById('NOTE_TA');if(!ta)return;
   var dateEl=document.getElementById('NOTE_DATE_'+nid);
+  var numEl=document.getElementById('NOTE_NUM_'+nid);
   var rp=G.stuData[sid]?'students':'quit_students';
   var upd={content:ta.value};
+  /* 날짜 수정 */
   if(dateEl&&dateEl.value.trim()){
-    /* 날짜 입력값을 한국어 형식으로 변환 */
-    var dv=dateEl.value.trim(); /* yyyy-mm-dd */
+    var dv=dateEl.value.trim();
     var dp=dv.split('-');
     if(dp.length===3){
       upd.date=dp[0]+'. '+parseInt(dp[1])+'. '+parseInt(dp[2])+'.';
-      upd.dateRaw=dv; /* 정렬용 원본 */
+      upd.dateRaw=dv;
+    }
+  }
+  /* 회차번호 수정 */
+  if(numEl&&numEl.value.trim()){
+    var nv=parseInt(numEl.value.trim());
+    if(!isNaN(nv)&&nv>=1&&nv<=200){
+      upd.lessonNum=nv;
     }
   }
   db.ref(rp+'/'+sid+'/notes/'+nid).update(upd);G.enid=null;R();
@@ -831,10 +839,17 @@ function vDetail(){
           var dp2=n.date.replace(/[.]/g,'').trim().split(/\s+/);
           if(dp2.length>=3)rawDate=dp2[0]+'-'+(dp2[1].length<2?'0':'')+dp2[1]+'-'+(dp2[2].length<2?'0':'')+dp2[2];
         }
-        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:10px;padding:8px 12px">';
-        h+='<span style="font-size:12px;font-weight:700;color:#0369A1;white-space:nowrap">📅 수업날짜</span>';
-        h+='<input type="date" id="NOTE_DATE_'+n.id+'" value="'+rawDate+'" style="flex:1;border:none;background:transparent;font-size:13px;color:#0369A1;font-weight:600;outline:none;cursor:pointer">';
-        h+='<span style="font-size:10px;color:#9CA3AF">수정 가능</span>';
+        h+='<div style="background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:10px;padding:10px 12px;margin-bottom:8px">';
+        h+='<div style="font-size:11px;font-weight:700;color:#0369A1;margin-bottom:8px">✏️ 수업 정보 수정</div>';
+        h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">';
+        h+='<span style="font-size:12px;font-weight:700;color:#0369A1;white-space:nowrap;min-width:52px">📅 날짜</span>';
+        h+='<input type="date" id="NOTE_DATE_'+n.id+'" value="'+rawDate+'" style="flex:1;border:1.5px solid #BAE6FD;background:#fff;border-radius:8px;font-size:13px;color:#0369A1;font-weight:600;outline:none;cursor:pointer;padding:5px 8px">';
+        h+='</div>';
+        h+='<div style="display:flex;gap:8px;align-items:center">';
+        h+='<span style="font-size:12px;font-weight:700;color:#0369A1;white-space:nowrap;min-width:52px">🔢 회차</span>';
+        h+='<input type="number" id="NOTE_NUM_'+n.id+'" value="'+(n.lessonNum||0)+'" min="1" max="200" style="flex:1;border:1.5px solid #BAE6FD;background:#fff;border-radius:8px;font-size:13px;color:#0369A1;font-weight:600;outline:none;padding:5px 8px;max-width:80px">';
+        h+='<span style="font-size:11px;color:#9CA3AF">회차번호를 직접 수정하세요</span>';
+        h+='</div>';
         h+='</div>';
         h+='<textarea id="NOTE_TA" class="nta">'+xe(n.content||'')+'</textarea>';
         h+='<div style="display:flex;gap:7px;margin-top:8px">';

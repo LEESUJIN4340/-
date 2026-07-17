@@ -744,7 +744,8 @@ function vDetail(){
   if(!s)return '<div class="empty"><div style="font-size:30px">😕</div><p style="font-size:13px">학생 정보를 찾을 수 없습니다</p></div>';
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100);
   var dayList=s.days?s.days.split(','):[s.day||'월'],dc2=DC[dayList[0]]||DC['월'],c=rc(r);
-  var isQuit=!!G.quitData[G.sid],ns=noteArr(G.curNotes),rev=ns,i,n,h='';
+  var isQuit=!!G.quitData[G.sid],ns=noteArr(G.curNotes),rev=[],i,n,h='';
+  for(i=ns.length-1;i>=0;i--)rev.push(ns[i]);
   h='<button class="back-btn" onclick="goBack()">← 목록으로</button>';
   if(isQuit){
     h+='<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700">📦 퇴원 학생';
@@ -809,10 +810,10 @@ function vDetail(){
   } else {
     for(i=0;i<rev.length;i++){
       n=rev[i];
-      var curTermN=+n.term||1,nextTermN=(i+1<rev.length)?(+rev[i+1].term||1):0,prevTermN=(i>0)?(+rev[i-1].term||1):0,termLabel='';
-      /* 오름차순: 기수가 처음 나오거나 이전과 달라지면 구분선 표시 */
+      var curTermN=+n.term||1,nextTermN=(i+1<rev.length)?(+rev[i+1].term||1):0,prevTermN=(i>0)?(+rev[i-1].term||1):-1,termLabel='';
+      /* 내림차순: 기수가 처음 나오거나 다음과 달라지면 구분선 표시 */
       if(i===0||curTermN!==prevTermN){
-        var isLatest=(nextTermN===0||curTermN===nextTermN);
+        var isLatest=(i===0); /* 첫번째(가장 최신)가 현재 진행 기수 */
         termLabel='<div style="background:'+(curTermN>1?'linear-gradient(135deg,#EEF2FF,#E0E7FF)':'#F3F4F6')+';'+(curTermN>1?'border:2px solid #818CF8;':'')+' border-radius:10px;padding:7px 14px;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="font-size:14px">📚</span><span style="font-weight:800;color:'+(curTermN>1?'#4338CA':'#6B7280')+';font-size:13px">'+curTermN+'기'+(isLatest?' (진행중)':'')+'</span></div>';
       }
       h+=termLabel;

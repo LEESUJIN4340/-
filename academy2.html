@@ -377,6 +377,55 @@ function saveNote(sid,nid){
   }
   db.ref(rp+'/'+sid+'/notes/'+nid).update(upd);G.enid=null;R();
 }
+/* ══ 회차 자동 재정렬 (날짜순으로 1부터) ══ */
+function reorderLessons(sid){
+  if(!confirm('모든 수업 기록을 날짜순으로 회차를 자동 정렬하시겠습니까?'))return;
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes').once('value',function(snap){
+    var notes=snap.val()||{};
+    var keys=Object.keys(notes);
+    if(!keys.length){showToast('수업 기록이 없습니다.');return;}
+
+    /* 기수별로 분류 */
+    var termGroups={},i,k,n,term;
+    for(i=0;i<keys.length;i++){
+      k=keys[i];n=notes[k];
+      term=+n.term||1;
+      if(!termGroups[term])termGroups[term]=[];
+      termGroups[term].push({key:k,node:n});
+    }
+
+    /* 각 기수별로 날짜순 정렬 후 1부터 번호 재부여 */
+    function parseD(n){
+      if(n.dateRaw)return new Date(n.dateRaw);
+      var s=n.date||'';
+      var m=s.replace(/[.]/g,'').trim().split(' ');
+      if(m.length>=3)return new Date(+m[0],+m[1]-1,+m[2]);
+      return new Date(0);
+    }
+
+    var upd={};
+    var terms=Object.keys(termGroups).map(Number).sort(function(a,b){return a-b;});
+    for(i=0;i<terms.length;i++){
+      term=terms[i];
+      var arr=termGroups[term];
+      /* 날짜순 정렬 */
+      arr.sort(function(a,b){return parseD(a.node)-parseD(b.node);});
+      /* 1부터 번호 재부여 */
+      for(var j=0;j<arr.length;j++){
+        upd['notes/'+arr[j].key+'/lessonNum']=j+1;
+        upd['notes/'+arr[j].key+'/term']=term;
+      }
+    }
+
+    db.ref(rp+'/'+sid).update(upd).then(function(){
+      showToast('✅ 회차가 날짜순으로 정렬되었습니다!');
+    }).catch(function(e){
+      showToast('❌ 오류: '+e.message);
+    });
+  });
+}
+
 function delNote(sid,nid){
   if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
   var s=stuById(sid);
@@ -851,7 +900,12 @@ function vDetail(){
   }
   h+='<button class="dl-btn" onclick="downloadStudentNotes(this.dataset.sid)" data-sid="'+xe(s.id)+'">📥 이 학생 수업메모 저장</button>';
   h+='<div style="height:10px"></div>';
-  h+='<div class="sec-ttl">📝 수업 기록 ('+ns.length+'회)</div>';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">';
+  h+='<span style="font-size:14px;font-weight:700;color:#374151">📝 수업 기록 ('+ns.length+'회)</span>';
+  if(G.admin&&ns.length>0&&!isQuit){
+    h+='<button onclick="reorderLessons(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">🔧 회차 자동정렬</button>';
+  }
+  h+='</div>';
   if(!ns.length){
     h+='<div style="text-align:center;color:#9CA3AF;padding:28px;background:#F9FAFB;border-radius:12px;font-size:13px"><div style="font-size:26px;margin-bottom:7px">📋</div>아직 수업 기록이 없습니다</div>';
   } else {

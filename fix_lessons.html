@@ -230,15 +230,38 @@ function renderNotes(){
     h+='<input class="mini-input" type="number" min="1" max="99" value="'+n.lessonNum+'" id="NUM_'+n.key+'" style="border-color:'+ts.bd+'">';
     h+='<span style="font-size:11px;color:'+ts.tx+';font-weight:600">회차</span>';
     h+='</div></div>';
-    /* 메모 내용 */
+    /* 메모 내용 + 삭제 버튼 */
+    h+='<div style="display:flex;align-items:flex-start;gap:8px">';
     if(n.content){
-      h+='<div style="font-size:12px;color:#374151;line-height:1.5;white-space:pre-wrap">'+xe(n.content.slice(0,80))+(n.content.length>80?'...':'')+'</div>';
+      h+='<div style="flex:1;font-size:12px;color:#374151;line-height:1.5;white-space:pre-wrap">'+xe(n.content.slice(0,80))+(n.content.length>80?'...':'')+'</div>';
     } else {
-      h+='<div style="font-size:12px;color:#9CA3AF">(메모 없음)</div>';
+      h+='<div style="flex:1;font-size:12px;color:#9CA3AF">(메모 없음)</div>';
     }
+    h+='<button data-key="'+n.key+'" onclick="deleteNote(this.dataset.key)" style="flex-shrink:0;background:#FEE2E2;color:#DC2626;border:none;border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">🗑️ 삭제</button>';
+    h+='</div>';
     h+='</div>';
   }
   box.innerHTML=h;
+}
+
+/* ══ 노트 삭제 ══ */
+function deleteNote(key){
+  if(!confirm('이 수업 기록을 삭제하시겠습니까?'))return;
+  if(!G.curSid){showToast('학생을 먼저 선택해주세요.');return;}
+  db.ref('students/'+G.curSid+'/notes/'+key).remove()
+    .then(function(){
+      /* 로컬에서도 제거 */
+      G.curNotes=G.curNotes.filter(function(n){return n.key!==key;});
+      /* usedLessons 1 감소 */
+      var s=G.students.find(function(x){return x.id===G.curSid;});
+      if(s&&s.usedLessons>0){
+        db.ref('students/'+G.curSid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
+        s.usedLessons=Math.max(0,(+s.usedLessons||1)-1);
+      }
+      renderNotes();
+      showToast('🗑️ 삭제되었습니다.');
+    })
+    .catch(function(e){showToast('❌ 삭제 실패: '+e.message);});
 }
 
 /* ══ 날짜순 자동정렬 ══ */

@@ -1092,8 +1092,72 @@ function R(){
   if(srchBtn)srchBtn.onclick=doSearch;
 }
 
+/* ══ 원장 로그인 시 전체 학생 회차 자동 수정 ══ */
+function autoFixAllLessons(){
+  db.ref('students').once('value',function(snap){
+    var data=snap.val()||{};
+    var skeys=Object.keys(data);
+    var fixedCount=0;
+
+    skeys.forEach(function(sid){
+      var stu=data[sid];
+      var notes=stu.notes;
+      if(!notes)return;
+      var nkeys=Object.keys(notes);
+      if(!nkeys.length)return;
+
+      /* 노트 배열 */
+      var arr=nkeys.map(function(k){
+        var n=notes[k];n.key=k;
+        n.term=+n.term||1;
+        n.lessonNum=+n.lessonNum||0;
+        return n;
+      });
+
+      /* 날짜순 정렬 */
+      arr.sort(function(a,b){return parseD(a)-parseD(b);});
+
+      /* 기수별 분류 */
+      var groups={};
+      arr.forEach(function(n){
+        var t=n.term;
+        if(!groups[t])groups[t]=[];
+        groups[t].push(n);
+      });
+
+      /* 각 기수별 날짜순 정렬 후 번호 확인 */
+      var upd={};
+      var needFix=false;
+      var terms=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
+      terms.forEach(function(term){
+        var termArr=groups[term];
+        termArr.sort(function(a,b){return parseD(a)-parseD(b);});
+        termArr.forEach(function(n,j){
+          var expected=j+1;
+          if(n.lessonNum!==expected){
+            upd['notes/'+n.key+'/lessonNum']=expected;
+            needFix=true;
+          }
+        });
+      });
+
+      if(needFix){
+        fixedCount++;
+        db.ref('students/'+sid).update(upd);
+      }
+    });
+
+    if(fixedCount>0){
+      setTimeout(function(){
+        showToast('🔧 '+fixedCount+'명의 수업 회차가 자동 수정되었습니다.');
+      },1500);
+    }
+  });
+}
+
+
 auth.onAuthStateChanged(function(user){
-  if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();}
+  if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();if(G.admin){setTimeout(autoFixAllLessons,3000);}}
   else{
     G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};
     G.assignData={};G.teachers=[];G.assignTeacher=null;

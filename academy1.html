@@ -199,11 +199,20 @@ function startListen(){
 }
 
 function loadNotes(sid){
-  if(_noteListener){var pr=G.stuData[_noteListener]?'students':'quit_students';db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;}
-  G.curNotes={};if(!sid)return;
+  /* 기존 리스너 모두 해제 */
+  if(_noteListener){
+    db.ref('students/'+_noteListener+'/notes').off();
+    db.ref('quit_students/'+_noteListener+'/notes').off();
+    _noteListener=null;
+  }
+  G.curNotes={};
+  if(!sid)return;
   _noteListener=sid;
   var rp=G.stuData[sid]?'students':'quit_students';
-  db.ref(rp+'/'+sid+'/notes').on('value',function(snap){G.curNotes=snap.val()||{};if(G.view==='det'&&G.sid===sid)R();});
+  db.ref(rp+'/'+sid+'/notes').on('value',function(snap){
+    G.curNotes=snap.val()||{};
+    if(G.view==='det'&&G.sid===sid)R();
+  });
 }
 
 function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
@@ -603,7 +612,18 @@ function doLogin(){
 }
 function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut();}
 function goView(v){G.prevView=G.view;G.view=v;R();}
-function goStu(id){G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;loadNotes(id);R();}
+function goStu(id){
+  G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;
+  /* ★ 기존 리스너 완전히 끊고 새로 시작 */
+  if(_noteListener){
+    db.ref('students/'+_noteListener+'/notes').off();
+    db.ref('quit_students/'+_noteListener+'/notes').off();
+    _noteListener=null;
+  }
+  G.curNotes={};
+  R(); /* 먼저 화면 그리고 */
+  loadNotes(id); /* 노트 로드 (완료되면 자동 갱신) */
+}
 function goBack(){
   if(_noteListener){var pr=G.stuData[_noteListener]?'students':'quit_students';db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;}
   G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();
@@ -1189,6 +1209,9 @@ function autoFixAllLessons(){
       var upd={};
       var needFix=false;
       var terms=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
+      /* 현재 기수의 노트 수 = 실제 진행횟수 */
+      var stuTerm=+stu.term||1;
+      var actualUsed=0;
       terms.forEach(function(term){
         var termArr=groups[term];
         termArr.sort(function(a,b){return parseD(a)-parseD(b);});
@@ -1199,7 +1222,16 @@ function autoFixAllLessons(){
             needFix=true;
           }
         });
+        /* 현재 기수의 노트 수를 usedLessons로 사용 */
+        if(term===stuTerm)actualUsed=termArr.length;
       });
+
+      /* usedLessons가 실제 노트 수와 다르면 수정 */
+      var curUsed=+stu.usedLessons||0;
+      if(actualUsed>0 && curUsed!==actualUsed){
+        upd['usedLessons']=actualUsed;
+        needFix=true;
+      }
 
       if(needFix){
         fixedCount++;
@@ -1207,13 +1239,20 @@ function autoFixAllLessons(){
       }
     });
 
-    if(fixedCount>0){
-      setTimeout(function(){
+    /* ★ 수정 여부 관계없이 현재 보는 학생 노트 재로드 */
+    setTimeout(function(){
+      if(G.view==='det'&&G.sid){
+        if(_noteListener){
+          var rp2=G.stuData[_noteListener]?'students':'quit_students';
+          db.ref(rp2+'/'+_noteListener+'/notes').off();
+          _noteListener=null;
+        }
+        loadNotes(G.sid);
+      }
+      if(fixedCount>0){
         showToast('🔧 '+fixedCount+'명의 수업 회차가 자동 수정되었습니다.');
-        /* 현재 학생 상세 보는 중이면 노트 갱신 */
-        if(G.view==='det'&&G.sid){loadNotes(G.sid);}
-      },1500);
-    }
+      }
+    },2000);
   });
 }
 

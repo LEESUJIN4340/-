@@ -197,16 +197,13 @@ function startListen(){
     safeR();
   });
 }
-
 function loadNotes(sid){
-  /* 기존 리스너 모두 해제 */
   if(_noteListener){
     db.ref('students/'+_noteListener+'/notes').off();
     db.ref('quit_students/'+_noteListener+'/notes').off();
     _noteListener=null;
   }
-  G.curNotes={};
-  if(!sid)return;
+  G.curNotes={};if(!sid)return;
   _noteListener=sid;
   var rp=G.stuData[sid]?'students':'quit_students';
   db.ref(rp+'/'+sid+'/notes').on('value',function(snap){
@@ -214,10 +211,8 @@ function loadNotes(sid){
     if(G.view==='det'&&G.sid===sid)R();
   });
 }
-
 function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
 
-/* ══ 학생 CRUD ══ */
 function saveStu(){
   if(_saving)return;
   var ne=document.getElementById('F_NAME');
@@ -274,46 +269,41 @@ function delQuitStu(id){
   if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
   db.ref('quit_students/'+id).remove();G.sid=null;G.view='quit';G.curNotes={};R();
 }
-
-
-/* 프리셋 버튼 */
-function setPreset(elId,val){
-  var el=document.getElementById(elId);if(el)el.value=val;
-}
-/* ══ 수업 횟수 탭 전환 ══ */
-function switchAddTab(tab){
-  var panels={cur:'PANEL_CUR',new:'PANEL_NEW',del:'PANEL_DEL'};
-  var btns={cur:'TAB_CUR',new:'TAB_NEW',del:'TAB_DEL'};
-  var colors={cur:'#6366F1',new:'#4338CA',del:'#DC2626'};
-  Object.keys(panels).forEach(function(k){
-    var p=document.getElementById(panels[k]);
-    var b=document.getElementById(btns[k]);
-    if(p)p.style.display=(k===tab?'block':'none');
-    if(b){b.style.background=(k===tab?colors[k]:'#F3F4F6');b.style.color=(k===tab?'#fff':'#6B7280');}
-  });
-}
-
-/* ══ 수업 횟수 삭제 ══ */
-function doDelLesson(sid){
-  var delEl=document.getElementById('DEL_LESSON_CNT');
-  var del=parseInt(delEl?delEl.value:2)||2;
-  if(del<1||del>200){alert('1~200 사이로 입력해 주세요.');return;}
-  var s=stuById(sid);if(!s)return;
-  var newTotal=(+s.totalLessons||0)-del;
-  if(newTotal<(+s.usedLessons||0)){
-    alert('이미 진행한 수업('+s.usedLessons+'회)보다 적게 만들 수 없습니다.\n최대 '+(+s.totalLessons-(+s.usedLessons||0))+'회까지 삭제 가능합니다.');
-    return;
-  }
-  if(newTotal<1){alert('총 수업 횟수는 최소 1회 이상이어야 합니다.');return;}
-  if(!confirm(del+'회를 삭제하시겠습니까? ('+s.totalLessons+'회 → '+newTotal+'회)'))return;
-  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
-  G.showAddLesson=false;G.addLessonSid=null;
-  showToast(del+'회 삭제되었습니다. 총 '+newTotal+'회');
-}
-
 function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
 function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
-/* 현재 기수에 횟수 추가 */
+function addLesson(sid){
+  if(_addingLesson){showToast('⏳ 저장 중입니다. 잠시 후 다시 눌러주세요.');return;}
+  var s=stuById(sid);if(!s)return;
+  if(rem(s)<=0){openAddLesson(sid);return;}
+  _addingLesson=true;
+  db.ref('students/'+sid).once('value',function(stuSnap){
+    var stuData=stuSnap.val();
+    if(!stuData){_addingLesson=false;return;}
+    var term=+stuData.term||1;
+    var totalLessons=+stuData.totalLessons||0;
+    var usedLessons=+stuData.usedLessons||0;
+    var r2=Math.max(0,totalLessons-usedLessons);
+    if(r2<=0){_addingLesson=false;openAddLesson(sid);return;}
+    var globalUsed=Math.min(usedLessons+1,totalLessons);
+    var r3=Math.max(0,totalLessons-globalUsed);
+    var notes=stuData.notes||{};
+    var nkeys=Object.keys(notes),i,maxNum=0;
+    for(i=0;i<nkeys.length;i++){
+      var n=notes[nkeys[i]];
+      var nTerm=n.term&&+n.term>0?+n.term:1;
+      if(nTerm===term&&(+n.lessonNum||0)>maxNum)maxNum=+n.lessonNum||0;
+    }
+    var nu=maxNum+1;
+    var nid=uid(),upd={usedLessons:globalUsed};
+    upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
+    db.ref('students/'+sid).update(upd).then(function(){
+      _addingLesson=false;
+      if(r3===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
+      if(r3===0)showToast(s.name+' 모든 수업 완료!');
+    }).catch(function(e){_addingLesson=false;showToast('❌ 저장 실패: '+e.message);});
+  }).catch(function(e){_addingLesson=false;showToast('❌ 오류: '+e.message);});
+}
+
 function doAddLessonCur(sid){
   var addEl=document.getElementById('ADD_LESSON_CNT');
   var add=parseInt(addEl?addEl.value:4)||4;
@@ -324,7 +314,6 @@ function doAddLessonCur(sid){
   G.showAddLesson=false;G.addLessonSid=null;
   showToast((+s.term||1)+'기에 '+add+'회 추가! 총 '+newTotal+'회');
 }
-/* 새 기수 시작 */
 function doAddLessonNew(sid){
   var addEl=document.getElementById('NEW_LESSON_CNT');
   var add=parseInt(addEl?addEl.value:4)||4;
@@ -335,63 +324,19 @@ function doAddLessonNew(sid){
   G.showAddLesson=false;G.addLessonSid=null;
   showToast('📚 '+newTerm+'기 시작! '+add+'회 등록되었습니다.');
 }
-/* 하위호환 */
 function doAddLesson(sid){doAddLessonNew(sid);}
-function addLesson(sid){
-  /* ★ 중복 실행 방지 */
-  if(_addingLesson){showToast('⏳ 저장 중입니다. 잠시 후 다시 눌러주세요.');return;}
+function doDelLesson(sid){
+  var delEl=document.getElementById('DEL_LESSON_CNT');
+  var del=parseInt(delEl?delEl.value:2)||2;
+  if(del<1||del>200){alert('1~200 사이로 입력해 주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  if(rem(s)<=0){openAddLesson(sid);return;}
-  _addingLesson=true;
-
-  /* ★ Firebase에서 학생 전체 데이터를 직접 읽어서 term/used/total 확인 */
-  db.ref('students/'+sid).once('value',function(stuSnap){
-    var stuData=stuSnap.val();
-    if(!stuData){_addingLesson=false;return;}
-
-    var term=+stuData.term||1;
-    var totalLessons=+stuData.totalLessons||0;
-    var usedLessons=+stuData.usedLessons||0;
-    var r2=Math.max(0,totalLessons-usedLessons);
-
-    /* 수업 남은 횟수 재확인 */
-    if(r2<=0){_addingLesson=false;openAddLesson(sid);return;}
-
-    var globalUsed=Math.min(usedLessons+1,totalLessons);
-    var r3=Math.max(0,totalLessons-globalUsed);
-
-    /* ★ notes도 Firebase에서 직접 읽어서 현재 기수 최대 lessonNum+1 계산 */
-    var notes=stuData.notes||{};
-    var nkeys=Object.keys(notes),i,maxNum=0;
-    for(i=0;i<nkeys.length;i++){
-      var n=notes[nkeys[i]];
-      /* ★ term이 정확히 일치하는 것만 카운트 */
-      if(+n.term===term && (+n.lessonNum||0)>maxNum){
-        maxNum=+n.lessonNum||0;
-      }
-    }
-    var nu=maxNum+1;
-    var nid=uid(),upd={usedLessons:globalUsed};
-    upd['notes/'+nid]={
-      id:nid,
-      date:new Date().toLocaleDateString('ko-KR'),
-      content:'',
-      lessonNum:nu,
-      term:term  /* ★ Firebase에서 읽은 정확한 term 사용 */
-    };
-
-    db.ref('students/'+sid).update(upd).then(function(){
-      _addingLesson=false;
-      if(r3===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
-      if(r3===0)showToast(s.name+' 모든 수업 완료!');
-    }).catch(function(e){
-      _addingLesson=false;
-      showToast('❌ 저장 실패: '+e.message);
-    });
-  }).catch(function(e){
-    _addingLesson=false;
-    showToast('❌ 오류: '+e.message);
-  });
+  var newTotal=(+s.totalLessons||0)-del;
+  if(newTotal<(+s.usedLessons||0)){alert('이미 진행한 수업('+s.usedLessons+'회)보다 적게 만들 수 없습니다.');return;}
+  if(newTotal<1){alert('총 수업 횟수는 최소 1회 이상이어야 합니다.');return;}
+  if(!confirm(del+'회를 삭제하시겠습니까? ('+s.totalLessons+'회 → '+newTotal+'회)'))return;
+  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+  G.showAddLesson=false;G.addLessonSid=null;
+  showToast(del+'회 삭제되었습니다. 총 '+newTotal+'회');
 }
 function saveNote(sid,nid){
   var ta=document.getElementById('NOTE_TA');if(!ta)return;
@@ -399,129 +344,68 @@ function saveNote(sid,nid){
   var numEl=document.getElementById('NOTE_NUM_'+nid);
   var rp=G.stuData[sid]?'students':'quit_students';
   var upd={content:ta.value};
-  /* 날짜 수정 */
   if(dateEl&&dateEl.value.trim()){
-    var dv=dateEl.value.trim();
-    var dp=dv.split('-');
-    if(dp.length===3){
-      upd.date=dp[0]+'. '+parseInt(dp[1])+'. '+parseInt(dp[2])+'.';
-      upd.dateRaw=dv;
-    }
+    var dv=dateEl.value.trim(),dp=dv.split('-');
+    if(dp.length===3){upd.date=dp[0]+'. '+parseInt(dp[1])+'. '+parseInt(dp[2])+'.';upd.dateRaw=dv;}
   }
-  /* 회차번호 수정 */
   if(numEl&&numEl.value.trim()){
     var nv=parseInt(numEl.value.trim());
-    if(!isNaN(nv)&&nv>=1&&nv<=200){
-      upd.lessonNum=nv;
-    }
+    if(!isNaN(nv)&&nv>=1&&nv<=200)upd.lessonNum=nv;
   }
   db.ref(rp+'/'+sid+'/notes/'+nid).update(upd);G.enid=null;R();
 }
-/* ══ 회차 자동 재정렬 (날짜순으로 1부터) ══ */
 function reorderLessons(sid){
-  if(!confirm('모든 수업 기록을 날짜순으로 회차를 자동 정렬하시겠습니까?\n(기수 구분 없이 전체 날짜순으로 정렬됩니다)'))return;
+  if(!confirm('모든 수업 기록을 날짜순으로 회차를 자동 정렬하시겠습니까?'))return;
   var rp=G.stuData[sid]?'students':'quit_students';
   db.ref(rp+'/'+sid+'/notes').once('value',function(snap){
-    var notes=snap.val()||{};
-    var keys=Object.keys(notes);
+    var notes=snap.val()||{},keys=Object.keys(notes),i;
     if(!keys.length){showToast('수업 기록이 없습니다.');return;}
-
-    /* 날짜 파싱 함수 */
-    function parseD(n){
-      if(n.dateRaw)return new Date(n.dateRaw);
-      var s=(n.date||'').replace(/[.]/g,'').trim();
-      var parts=s.split(' ').filter(function(p){return p.trim().length>0;});
-      if(parts.length>=3)return new Date(+parts[0],+parts[1]-1,+parts[2]);
-      return new Date(0);
-    }
-
-    /* 기수별로 분류 */
-    var termGroups={},i,k,n,term;
+    var groups={};
     for(i=0;i<keys.length;i++){
-      k=keys[i];n=notes[k];
-      term=+n.term||1;
-      if(!termGroups[term])termGroups[term]=[];
-      termGroups[term].push({key:k,node:n});
+      var n=notes[keys[i]];n.key=keys[i];
+      var t=+(n.term&&+n.term>0?n.term:1);
+      if(!groups[t])groups[t]=[];groups[t].push(n);
     }
-
-    /* 각 기수별 날짜순 정렬 후 1부터 번호 재부여 */
     var upd={};
-    var terms=Object.keys(termGroups).map(Number).sort(function(a,b){return a-b;});
-    for(i=0;i<terms.length;i++){
-      term=terms[i];
-      var arr=termGroups[term];
-      arr.sort(function(a,b){return parseD(a.node)-parseD(b.node);});
-      for(var j=0;j<arr.length;j++){
-        upd['notes/'+arr[j].key+'/lessonNum']=j+1;
-        upd['notes/'+arr[j].key+'/term']=term;
-      }
+    var terms=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
+    for(var ti=0;ti<terms.length;ti++){
+      var arr=groups[terms[ti]];
+      arr.sort(function(a,b){return parseD(a)-parseD(b);});
+      for(var j=0;j<arr.length;j++)upd['notes/'+arr[j].key+'/lessonNum']=j+1;
     }
-
-    if(!Object.keys(upd).length){showToast('정렬할 기록이 없습니다.');return;}
-
-    db.ref(rp+'/'+sid).update(upd)
-      .then(function(){
-        showToast('✅ 회차가 날짜순으로 정렬되었습니다!');
-        /* ★ 노트 리스너 재로드 */
-        if(_noteListener===sid){
-          db.ref(rp+'/'+sid+'/notes').off();
-          _noteListener=null;
-        }
-        loadNotes(sid);
-      })
-      .catch(function(e){showToast('❌ 오류: '+e.message);});
+    db.ref(rp+'/'+sid).update(upd).then(function(){
+      showToast('✅ 회차가 날짜순으로 정렬되었습니다!');
+      if(_noteListener===sid){db.ref(rp+'/'+sid+'/notes').off();_noteListener=null;}
+      loadNotes(sid);
+    }).catch(function(e){showToast('❌ 오류: '+e.message);});
   });
 }
-
-
 function delNote(sid,nid){
   if(!confirm('수업 기록을 삭제하시겠습니까?'))return;
   var s=stuById(sid);
   var rp=G.stuData[sid]?'students':'quit_students';
-  /* 삭제할 노트의 term 확인 후 해당 기수 lessonNum 재정렬 */
   db.ref(rp+'/'+sid+'/notes/'+nid).once('value',function(snap){
-    var delNote=snap.val();
-    var delTerm=delNote?(+delNote.term||1):1;
+    var delN=snap.val();var delTerm=delN?(+(delN.term&&+delN.term>0?delN.term:1)):1;
     db.ref(rp+'/'+sid+'/notes/'+nid).remove().then(function(){
       db.ref(rp+'/'+sid+'/usedLessons').set(Math.max(0,(+s.usedLessons||1)-1));
-      /* ★ 삭제 후 해당 기수 lessonNum 재정렬 */
-      /* 노트 리스너 재연결 */
-      if(_noteListener===sid){
-        db.ref(rp+'/'+sid+'/notes').off();
-        _noteListener=null;
-      }
-      loadNotes(sid);
       db.ref(rp+'/'+sid+'/notes').once('value',function(snap2){
-        var notes=snap2.val()||{},keys=Object.keys(notes),i,n;
-        /* 해당 기수 노트만 날짜순 정렬 */
+        var notes=snap2.val()||{},keys=Object.keys(notes),i;
         var termNotes=[];
         for(i=0;i<keys.length;i++){
-          n=notes[keys[i]];
-          if((+n.term||1)===delTerm)termNotes.push({key:keys[i],node:n});
+          var n=notes[keys[i]];
+          var nt=+(n.term&&+n.term>0?n.term:1);
+          if(nt===delTerm)termNotes.push({key:keys[i],node:n});
         }
-        termNotes.sort(function(a,b){
-          var da=a.node.dateRaw||'',db2=b.node.dateRaw||'';
-          if(da&&db2)return new Date(da)-new Date(db2);
-          function pd(s){var m=s.replace(/[.]/g,'').trim().split(' ');return m.length>=3?new Date(+m[0],+m[1]-1,+m[2]):new Date(0);}
-          return pd(a.node.date||'')-pd(b.node.date||'');
-        });
-        /* 1부터 순서대로 번호 재부여 */
+        termNotes.sort(function(a,b){return parseD(a.node)-parseD(b.node);});
         var upd={};
-        for(i=0;i<termNotes.length;i++){
-          upd['notes/'+termNotes[i].key+'/lessonNum']=i+1;
-        }
-        if(Object.keys(upd).length>0){
-          db.ref(rp+'/'+sid).update(upd);
-        }
+        for(i=0;i<termNotes.length;i++)upd['notes/'+termNotes[i].key+'/lessonNum']=i+1;
+        if(Object.keys(upd).length>0)db.ref(rp+'/'+sid).update(upd);
       });
     });
   });
 }
-
-/* ══ 강사 관리 ══ */
 function addTeacher(){
-  var inp=document.getElementById('NEW_TEACHER_EMAIL');
-  if(!inp)return;
+  var inp=document.getElementById('NEW_TEACHER_EMAIL');if(!inp)return;
   var email=inp.value.trim().toLowerCase();
   if(!email||email.indexOf('@')<0){alert('올바른 이메일을 입력해 주세요.');return;}
   if(email===ADMIN_EMAIL){alert('원장 계정은 추가할 수 없습니다.');return;}
@@ -535,15 +419,11 @@ function removeTeacher(email){
   if(!confirm(email+' 강사를 삭제하시겠습니까? 학생 수업 메모는 보존됩니다.'))return;
   db.ref('teachers').once('value',function(snap){
     var data=snap.val()||{},keys=Object.keys(data),i;
-    for(i=0;i<keys.length;i++){
-      if(data[keys[i]]&&data[keys[i]].email===email){db.ref('teachers/'+keys[i]).remove();break;}
-    }
+    for(i=0;i<keys.length;i++){if(data[keys[i]]&&data[keys[i]].email===email){db.ref('teachers/'+keys[i]).remove();break;}}
   });
   db.ref('assign/'+eKey(email)).remove();
   showToast('강사가 삭제되었습니다. 학생 데이터는 보존됩니다.');
 }
-
-/* ══ 배정 ══ */
 function openAssign(teacherEmail){G.prevView=G.view;G.view='assign';G.assignTeacher=teacherEmail;R();}
 function closeAssign(){G.view=G.prevView||'sch';G.assignTeacher=null;R();}
 function confirmAssign(){G.view=G.prevView||'sch';G.assignTeacher=null;showToast('배정이 저장되었습니다!');R();}
@@ -552,34 +432,25 @@ function toggleAssign(stuId){
   if(!G.assignData[key])G.assignData[key]={};
   if(G.assignData[key][stuId]===true){
     delete G.assignData[key][stuId];
-    db.ref('assign/'+key+'/'+stuId).remove()
-      .catch(function(e){showToast('저장 실패: '+e.message);});
+    db.ref('assign/'+key+'/'+stuId).remove().catch(function(e){showToast('저장 실패: '+e.message);});
   } else {
     G.assignData[key][stuId]=true;
-    db.ref('assign/'+key+'/'+stuId).set(true)
-      .catch(function(e){showToast('저장 실패: '+e.message);});
+    db.ref('assign/'+key+'/'+stuId).set(true).catch(function(e){showToast('저장 실패: '+e.message);});
   }
   R();
 }
 function assignAll(){
-  var key=eKey(G.assignTeacher);
-  var all=objArr(G.stuData),upd={},i;
+  var key=eKey(G.assignTeacher),all=objArr(G.stuData),upd={},i;
   for(i=0;i<all.length;i++)upd[all[i].id]=true;
   G.assignData[key]=upd;
-  db.ref('assign/'+key).set(upd)
-    .then(function(){showToast('전체 학생이 배정되었습니다.');})
-    .catch(function(e){showToast('저장 실패: '+e.message);});
+  db.ref('assign/'+key).set(upd).then(function(){showToast('전체 학생이 배정되었습니다.');}).catch(function(e){showToast('저장 실패: '+e.message);});
   R();
 }
 function assignNone(){
-  var key=eKey(G.assignTeacher);
-  G.assignData[key]={};
-  db.ref('assign/'+key).remove()
-    .catch(function(e){showToast('저장 실패: '+e.message);});
+  var key=eKey(G.assignTeacher);G.assignData[key]={};
+  db.ref('assign/'+key).remove().catch(function(e){showToast('저장 실패: '+e.message);});
   R();showToast('배정이 모두 해제되었습니다.');
 }
-
-/* ══ 기타 네비 ══ */
 function toggleFday(d){
   var idx=G.fdays.indexOf(d);
   if(idx>=0){if(G.fdays.length>1)G.fdays.splice(idx,1);}else{G.fdays.push(d);}
@@ -599,6 +470,7 @@ function setFlevel(lv){
     b.style.cssText=(lvn===lv?'background:'+lvst.bg+';border:2px solid '+lvst.bd+';color:'+lvst.tx+';font-weight:800':'background:#fff;border:2px solid #E5E7EB;color:#6B7280;font-weight:500')+';padding:7px 14px;border-radius:10px;font-size:13px;cursor:pointer';
   }
 }
+function setPreset(elId,val){var el=document.getElementById(elId);if(el)el.value=val;}
 function doLogin(){
   var em=(document.getElementById('EM_IN')||{}).value||'',pw=(document.getElementById('PW_IN')||{}).value||'';
   var btn=document.getElementById('LOGIN_BTN'),err=document.getElementById('LOGIN_ERR');
@@ -614,18 +486,19 @@ function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut(
 function goView(v){G.prevView=G.view;G.view=v;R();}
 function goStu(id){
   G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;
-  /* ★ 기존 리스너 완전히 끊고 새로 시작 */
   if(_noteListener){
     db.ref('students/'+_noteListener+'/notes').off();
     db.ref('quit_students/'+_noteListener+'/notes').off();
     _noteListener=null;
   }
-  G.curNotes={};
-  R(); /* 먼저 화면 그리고 */
-  loadNotes(id); /* 노트 로드 (완료되면 자동 갱신) */
+  G.curNotes={};R();loadNotes(id);
 }
 function goBack(){
-  if(_noteListener){var pr=G.stuData[_noteListener]?'students':'quit_students';db.ref(pr+'/'+_noteListener+'/notes').off();_noteListener=null;}
+  if(_noteListener){
+    db.ref('students/'+_noteListener+'/notes').off();
+    db.ref('quit_students/'+_noteListener+'/notes').off();
+    _noteListener=null;
+  }
   G.view=G.prevView||'sch';G.sid=null;G.enid=null;G.curNotes={};R();
 }
 function selDay(d){G.selDay=d;R();}
@@ -639,55 +512,15 @@ function doSearch(){
   var ss=allStu(),res=[],i,s;
   for(i=0;i<ss.length;i++){s=ss[i];if(isCS(q)?(toCS(s.name).indexOf(q)>=0):(s.name.indexOf(q)>=0))res.push(s);}
   if(!res.length){box.innerHTML='<p style="text-align:center;color:#9CA3AF;padding:28px 0;font-size:13px">검색 결과가 없습니다</p>';return;}
-  var h='';for(i=0;i<res.length;i++)h+=stuCardHtml(res[i]);
-  box.innerHTML=h;
+  var h='';for(i=0;i<res.length;i++)h+=stuCardHtml(res[i]);box.innerHTML=h;
 }
 var _toastTimer;
 function showToast(msg){G.notif=msg;R();clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){G.notif=null;R();},5000);}
 
-/* ══ 다운로드 ══ */
-function csvEsc(v){var s=String(v||'');if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)return'"'+s.replace(/"/g,'""')+'"';return s;}
-function downloadCSV(fn,csv){
-  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=fn;document.body.appendChild(a);a.click();
-  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
-}
-function downloadStudentInfo(){
-  var ss=allStu();if(!ss.length){alert('다운로드할 학생 정보가 없습니다.');return;}
-  ss.sort(function(a,b){return a.day.localeCompare(b.day)||a.time.localeCompare(b.time);});
-  var rows=['이름,생년월일,연락처,수업요일,수업시간,총수업횟수,진행횟수,남은횟수'],i,s;
-  for(i=0;i<ss.length;i++){s=ss[i];rows.push([csvEsc(s.name),csvEsc(s.birthdate),csvEsc(s.contact),csvEsc(s.day),csvEsc(s.time),s.totalLessons,s.usedLessons,rem(s)].join(','));}
-  downloadCSV('학생정보.csv',rows.join('\n'));showToast('학생 정보 다운로드 완료!');
-}
-function downloadAllNotes(){
-  showToast('수업 메모를 불러오는 중...');
-  db.ref('students').once('value',function(snap){
-    var data=snap.val()||{},rows=['학생이름,기수,회차,날짜,수업내용'],keys,i,k,s,ns,nkeys,j,nk,n,hasAny=false;
-    keys=Object.keys(data);
-    for(i=0;i<keys.length;i++){
-      k=keys[i];s=data[k];if(!s||!s.notes)continue;ns=s.notes;nkeys=Object.keys(ns);
-      nkeys.sort(function(a,b){return(+ns[a].lessonNum||0)-(+ns[b].lessonNum||0);});
-      for(j=0;j<nkeys.length;j++){nk=nkeys[j];n=ns[nk];hasAny=true;rows.push([csvEsc(s.name||''),n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}
-    }
-    if(!hasAny){showToast('저장된 수업 메모가 없습니다.');return;}
-    downloadCSV('수업메모.csv',rows.join('\n'));showToast('수업 메모 다운로드 완료!');
-  });
-}
-function downloadStudentNotes(sid){
-  var s=stuById(sid);if(!s)return;
-  var rp=G.stuData[sid]?'students':'quit_students';
-  db.ref(rp+'/'+sid+'/notes').once('value',function(snap){
-    var notes=snap.val()||{},keys=Object.keys(notes);
-    if(!keys.length){showToast('수업 메모가 없습니다.');return;}
-    var rows=['기수,회차,날짜,수업내용'],ns=[],i,k,n;
-    for(i=0;i<keys.length;i++){k=keys[i];n=notes[k];n.id=n.id||k;ns.push(n);}
-    ns.sort(function(a,b){var ta=+a.term||1,tb=+b.term||1;return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
-    for(i=0;i<ns.length;i++){n=ns[i];rows.push([n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}
-    downloadCSV(s.name+'_수업메모.csv',rows.join('\n'));showToast(s.name+' 메모 다운로드 완료!');
-  });
-}
 
+
+/* ══ HTML 빌더 ══ */
+/* ══ HTML 빌더 ══ */
 /* ══ HTML 빌더 ══ */
 function ringHtml(s){
   var r=rem(s),p=Math.min(((+s.usedLessons||0)/Math.max(+s.totalLessons||1,1))*100,100),c=rc(r);
@@ -1171,6 +1004,48 @@ function R(){
   var srchBtn=document.getElementById('SRCH_BTN');
   if(srchBtn)srchBtn.onclick=doSearch;
 }
+/* 다운로드 */
+function csvEsc(v){var s=String(v||'');if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)return'"'+s.replace(/"/g,'""')+'"';return s;}
+function downloadCSV(fn,csv){
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=fn;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+function downloadStudentInfo(){
+  var ss=allStu();if(!ss.length){alert('다운로드할 학생 정보가 없습니다.');return;}
+  ss.sort(function(a,b){return a.day.localeCompare(b.day)||a.time.localeCompare(b.time);});
+  var rows=['이름,생년월일,연락처,수업요일,수업시간,총수업횟수,진행횟수,남은횟수'],i,s;
+  for(i=0;i<ss.length;i++){s=ss[i];rows.push([csvEsc(s.name),csvEsc(s.birthdate),csvEsc(s.contact),csvEsc(s.day),csvEsc(s.time),s.totalLessons,s.usedLessons,rem(s)].join(','));}
+  downloadCSV('학생정보.csv',rows.join('\n'));showToast('학생 정보 다운로드 완료!');
+}
+function downloadAllNotes(){
+  showToast('수업 메모를 불러오는 중...');
+  db.ref('students').once('value',function(snap){
+    var data=snap.val()||{},rows=['학생이름,기수,회차,날짜,수업내용'],keys,i,k,s,ns,nkeys,j,nk,n,hasAny=false;
+    keys=Object.keys(data);
+    for(i=0;i<keys.length;i++){
+      k=keys[i];s=data[k];if(!s||!s.notes)continue;ns=s.notes;nkeys=Object.keys(ns);
+      nkeys.sort(function(a,b){return(+ns[a].lessonNum||0)-(+ns[b].lessonNum||0);});
+      for(j=0;j<nkeys.length;j++){nk=nkeys[j];n=ns[nk];hasAny=true;rows.push([csvEsc(s.name||''),n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}
+    }
+    if(!hasAny){showToast('저장된 수업 메모가 없습니다.');return;}
+    downloadCSV('수업메모.csv',rows.join('\n'));showToast('수업 메모 다운로드 완료!');
+  });
+}
+function downloadStudentNotes(sid){
+  var s=stuById(sid);if(!s)return;
+  var rp=G.stuData[sid]?'students':'quit_students';
+  db.ref(rp+'/'+sid+'/notes').once('value',function(snap){
+    var notes=snap.val()||{},keys=Object.keys(notes);
+    if(!keys.length){showToast('수업 메모가 없습니다.');return;}
+    var rows=['기수,회차,날짜,수업내용'],ns=[],i,k,n;
+    for(i=0;i<keys.length;i++){k=keys[i];n=notes[k];n.id=n.id||k;ns.push(n);}
+    ns.sort(function(a,b){var ta=+a.term||1,tb=+b.term||1;return ta!==tb?ta-tb:(+a.lessonNum||0)-(+b.lessonNum||0);});
+    for(i=0;i<ns.length;i++){n=ns[i];rows.push([n.term||1,n.lessonNum||'',csvEsc(n.date||''),csvEsc(n.content||'')].join(','));}
+    downloadCSV(s.name+'_수업메모.csv',rows.join('\n'));showToast(s.name+' 메모 다운로드 완료!');
+  });
+}
 
 /* ══ 원장 로그인 시 전체 학생 회차 자동 수정 ══ */
 function autoFixAllLessons(){
@@ -1186,50 +1061,48 @@ function autoFixAllLessons(){
       var nkeys=Object.keys(notes);
       if(!nkeys.length)return;
 
-      /* 노트 배열 */
+      /* ★ term이 있는 노트만 처리 - term은 절대 변경하지 않음 */
       var arr=nkeys.map(function(k){
         var n=notes[k];n.key=k;
-        n.term=+n.term||1;
         n.lessonNum=+n.lessonNum||0;
+        n.hasTerm=(n.term&&+n.term>0);
+        n.termVal=n.hasTerm?+n.term:null;
         return n;
-      });
+      }).filter(function(n){return n.hasTerm;});
 
-      /* 날짜순 정렬 */
+      if(!arr.length)return;
+
+      /* 날짜순 정렬 후 기수별 분류 */
       arr.sort(function(a,b){return parseD(a)-parseD(b);});
-
-      /* 기수별 분류 */
       var groups={};
       arr.forEach(function(n){
-        var t=n.term;
+        var t=n.termVal;
         if(!groups[t])groups[t]=[];
         groups[t].push(n);
       });
 
-      /* 각 기수별 날짜순 정렬 후 번호 확인 */
       var upd={};
       var needFix=false;
-      var terms=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
-      /* 현재 기수의 노트 수 = 실제 진행횟수 */
       var stuTerm=+stu.term||1;
       var actualUsed=0;
+      var terms=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
+
       terms.forEach(function(term){
         var termArr=groups[term];
         termArr.sort(function(a,b){return parseD(a)-parseD(b);});
         termArr.forEach(function(n,j){
-          var expected=j+1;
-          if(n.lessonNum!==expected){
-            upd['notes/'+n.key+'/lessonNum']=expected;
+          /* ★ lessonNum만 수정, term 절대 변경 안함 */
+          if(n.lessonNum!==j+1){
+            upd['notes/'+n.key+'/lessonNum']=j+1;
             needFix=true;
           }
         });
-        /* 현재 기수의 노트 수를 usedLessons로 사용 */
         if(term===stuTerm)actualUsed=termArr.length;
       });
 
-      /* usedLessons가 실제 노트 수와 다르면 수정 */
-      var curUsed=+stu.usedLessons||0;
-      if(actualUsed>0 && curUsed!==actualUsed){
-        upd['usedLessons']=actualUsed;
+      /* usedLessons 보정 */
+      if(actualUsed>0&&(+stu.usedLessons||0)!==actualUsed){
+        upd.usedLessons=actualUsed;
         needFix=true;
       }
 
@@ -1239,7 +1112,6 @@ function autoFixAllLessons(){
       }
     });
 
-    /* ★ 수정 여부 관계없이 현재 보는 학생 노트 재로드 */
     setTimeout(function(){
       if(G.view==='det'&&G.sid){
         if(_noteListener){
@@ -1249,17 +1121,18 @@ function autoFixAllLessons(){
         }
         loadNotes(G.sid);
       }
-      if(fixedCount>0){
-        showToast('🔧 '+fixedCount+'명의 수업 회차가 자동 수정되었습니다.');
-      }
+      if(fixedCount>0)showToast('🔧 '+fixedCount+'명의 수업 회차가 자동 수정되었습니다.');
     },2000);
   });
 }
 
 
 auth.onAuthStateChanged(function(user){
-  if(user){G.user=user;G.admin=(user.email===ADMIN_EMAIL);startListen();if(G.admin){setTimeout(autoFixAllLessons,3000);}}
-  else{
+  if(user){
+    G.user=user;G.admin=(user.email===ADMIN_EMAIL);
+    startListen();
+    if(G.admin){setTimeout(autoFixAllLessons,3000);}
+  } else {
     G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};
     G.assignData={};G.teachers=[];G.assignTeacher=null;
     if(_noteListener){
@@ -1272,6 +1145,7 @@ auth.onAuthStateChanged(function(user){
     R();
   }
 });
+
 </script>
 </body>
 </html>

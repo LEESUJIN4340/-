@@ -269,20 +269,15 @@ function setPreset(elId,val){
 }
 /* ══ 수업 횟수 탭 전환 ══ */
 function switchAddTab(tab){
-  var panAdd=document.getElementById('PANEL_ADD');
-  var panDel=document.getElementById('PANEL_DEL');
-  var btnAdd=document.getElementById('TAB_ADD');
-  var btnDel=document.getElementById('TAB_DEL');
-  if(!panAdd||!panDel)return;
-  if(tab==='add'){
-    panAdd.style.display='block';panDel.style.display='none';
-    btnAdd.style.background='#6366F1';btnAdd.style.color='#fff';
-    btnDel.style.background='#F3F4F6';btnDel.style.color='#6B7280';
-  } else {
-    panAdd.style.display='none';panDel.style.display='block';
-    btnDel.style.background='#DC2626';btnDel.style.color='#fff';
-    btnAdd.style.background='#F3F4F6';btnAdd.style.color='#6B7280';
-  }
+  var panels={cur:'PANEL_CUR',new:'PANEL_NEW',del:'PANEL_DEL'};
+  var btns={cur:'TAB_CUR',new:'TAB_NEW',del:'TAB_DEL'};
+  var colors={cur:'#6366F1',new:'#4338CA',del:'#DC2626'};
+  Object.keys(panels).forEach(function(k){
+    var p=document.getElementById(panels[k]);
+    var b=document.getElementById(btns[k]);
+    if(p)p.style.display=(k===tab?'block':'none');
+    if(b){b.style.background=(k===tab?colors[k]:'#F3F4F6');b.style.color=(k===tab?'#fff':'#6B7280');}
+  });
 }
 
 /* ══ 수업 횟수 삭제 ══ */
@@ -305,26 +300,30 @@ function doDelLesson(sid){
 
 function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
 function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
-function doAddLesson(sid){
+/* 현재 기수에 횟수 추가 */
+function doAddLessonCur(sid){
   var addEl=document.getElementById('ADD_LESSON_CNT');
   var add=parseInt(addEl?addEl.value:4)||4;
   if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  var r=rem(s);
-  if(r<=0){
-    /* 수업 완료 → 새 기수 시작 */
-    var newTerm=(+s.term||1)+1;
-    db.ref('students/'+sid).update({totalLessons:add,usedLessons:0,term:newTerm,notified:false});
-    G.showAddLesson=false;G.addLessonSid=null;
-    showToast(newTerm+'기 시작! '+add+'회 등록되었습니다.');
-  } else {
-    /* 수업 진행중 → 현재 기수에 횟수만 추가 */
-    var newTotal=(+s.totalLessons||0)+add;
-    db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
-    G.showAddLesson=false;G.addLessonSid=null;
-    showToast(add+'회 추가되었습니다. 총 '+newTotal+'회');
-  }
+  var newTotal=(+s.totalLessons||0)+add;
+  db.ref('students/'+sid).update({totalLessons:newTotal,notified:false});
+  G.showAddLesson=false;G.addLessonSid=null;
+  showToast((+s.term||1)+'기에 '+add+'회 추가! 총 '+newTotal+'회');
 }
+/* 새 기수 시작 */
+function doAddLessonNew(sid){
+  var addEl=document.getElementById('NEW_LESSON_CNT');
+  var add=parseInt(addEl?addEl.value:4)||4;
+  if(add<1||add>200){alert('1~200 사이로 입력해 주세요.');return;}
+  var s=stuById(sid);if(!s)return;
+  var newTerm=(+s.term||1)+1;
+  db.ref('students/'+sid).update({totalLessons:add,usedLessons:0,term:newTerm,notified:false});
+  G.showAddLesson=false;G.addLessonSid=null;
+  showToast('📚 '+newTerm+'기 시작! '+add+'회 등록되었습니다.');
+}
+/* 하위호환 */
+function doAddLesson(sid){doAddLessonNew(sid);}
 function addLesson(sid){
   /* ★ 중복 실행 방지 */
   if(_addingLesson){showToast('⏳ 저장 중입니다. 잠시 후 다시 눌러주세요.');return;}
@@ -1011,44 +1010,67 @@ function vAddLessonModal(){
   h+='<div style="font-size:17px;font-weight:800;color:#111827;text-align:center;margin-bottom:6px">수업 횟수 관리</div>';
   h+='<div style="background:#F3F4F6;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;font-size:13px;color:#374151">';
   h+='<b>'+xe(s.name)+'</b> · '+curTerm+'기 · '+s.usedLessons+'/'+s.totalLessons+'회 ('+r+'회 남음)</div>';
-  /* 탭 버튼 */
+
+  /* ── 탭: 현재기수추가 / 새기수시작 / 횟수삭제 ── */
   h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
-  h+='<button id="TAB_ADD" data-tab="add" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:9px;border-radius:10px;background:#6366F1;color:#fff;border:none;font-weight:700;font-size:13px;cursor:pointer">➕ 횟수 추가</button>';
-  h+='<button id="TAB_DEL" data-tab="del" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:9px;border-radius:10px;background:#F3F4F6;color:#6B7280;border:none;font-weight:700;font-size:13px;cursor:pointer">➖ 횟수 삭제</button>';
-  h+='</div>';
-  /* 추가 패널 */
-  h+='<div id="PANEL_ADD">';
-  if(r<=0){
-    h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:11px;padding:10px 14px;margin-bottom:12px;text-align:center">';
-    h+='<div style="font-size:12px;color:#6B7280;margin-bottom:2px">새 기수로 시작</div>';
-    h+='<div style="font-size:18px;font-weight:800;color:#4338CA">📚 '+nextTerm+'기 - 1회부터 새로 시작</div></div>';
+  if(r>0){
+    h+='<button id="TAB_CUR" data-tab="cur" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:8px 4px;border-radius:10px;background:#6366F1;color:#fff;border:none;font-weight:700;font-size:12px;cursor:pointer">➕ 현재기수<br>추가</button>';
   }
-  h+='<label class="lbl">추가할 수업 횟수</label>';
-  h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="4" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
-  h+='<div style="display:flex;gap:6px;margin-bottom:14px">';
-  var presets=[1,2,3,4,5,6,7,8,9,10,11,12],pi;
+  h+='<button id="TAB_NEW" data-tab="new" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:8px 4px;border-radius:10px;background:'+(r<=0?'#6366F1':'#F3F4F6')+';color:'+(r<=0?'#fff':'#6B7280')+';border:none;font-weight:700;font-size:12px;cursor:pointer">📚 새기수<br>시작</button>';
+  h+='<button id="TAB_DEL" data-tab="del" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:8px 4px;border-radius:10px;background:#F3F4F6;color:#6B7280;border:none;font-weight:700;font-size:12px;cursor:pointer">➖ 횟수<br>삭제</button>';
+  h+='</div>';
+
+  /* ── 현재기수 추가 패널 ── */
+  if(r>0){
+    h+='<div id="PANEL_CUR">';
+    h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:10px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#4338CA">현재 <b>'+curTerm+'기</b> 수업 횟수를 추가합니다. 회차는 이어서 진행됩니다.</div>';
+    h+='<label class="lbl">추가할 수업 횟수</label>';
+    h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="4" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
+    h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
+    var presets=[1,2,3,4,5,6,7,8,9,10,11,12],pi;
+    for(pi=0;pi<presets.length;pi++){
+      h+='<button data-n="'+presets[pi]+'" data-elid="ADD_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:12px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
+    }
+    h+='</div>';
+    h+='<div style="display:flex;gap:9px">';
+    h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
+    h+='<button class="bp" onclick="doAddLessonCur(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+curTerm+'기 횟수 추가</button>';
+    h+='</div></div>';
+  }
+
+  /* ── 새기수 시작 패널 ── */
+  h+='<div id="PANEL_NEW" style="display:'+(r<=0?'block':'none')+'">';
+  h+='<div style="background:#EEF2FF;border:2px solid #818CF8;border-radius:11px;padding:10px 14px;margin-bottom:12px;text-align:center">';
+  h+='<div style="font-size:12px;color:#6B7280;margin-bottom:2px">새 기수로 시작</div>';
+  h+='<div style="font-size:20px;font-weight:800;color:#4338CA">📚 '+nextTerm+'기 시작</div>';
+  h+='<div style="font-size:11px;color:#6B7280;margin-top:2px">회차가 1부터 새로 시작됩니다</div></div>';
+  h+='<label class="lbl">'+nextTerm+'기 수업 횟수</label>';
+  h+='<input class="fi" type="number" id="NEW_LESSON_CNT" value="4" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
+  h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
   for(pi=0;pi<presets.length;pi++){
-    h+='<button data-n="'+presets[pi]+'" data-elid="ADD_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:6px 0;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;font-size:13px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
+    h+='<button data-n="'+presets[pi]+'" data-elid="NEW_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:12px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
   }
   h+='</div>';
   h+='<div style="display:flex;gap:9px">';
   h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
-  h+='<button class="bp" onclick="doAddLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+(r<=0?nextTerm+'기 시작':'횟수 추가')+'</button>';
+  h+='<button class="bp" onclick="doAddLessonNew(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;border-radius:12px">✅ '+nextTerm+'기 시작하기</button>';
   h+='</div></div>';
-  /* 삭제 패널 */
+
+  /* ── 횟수 삭제 패널 ── */
   h+='<div id="PANEL_DEL" style="display:none">';
-  h+='<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#DC2626">⚠️ 총 수업 횟수에서 삭제됩니다. 이미 진행한 수업보다 적게 만들 수 없습니다.</div>';
+  h+='<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:10px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#DC2626">⚠️ 총 수업 횟수에서 삭제됩니다. 이미 진행한 수업보다 적게 만들 수 없습니다.</div>';
   h+='<label class="lbl">삭제할 수업 횟수</label>';
   h+='<input class="fi" type="number" id="DEL_LESSON_CNT" value="2" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
-  h+='<div style="display:flex;gap:6px;margin-bottom:14px">';
+  h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
   for(pi=0;pi<presets.length;pi++){
-    h+='<button data-n="'+presets[pi]+'" data-elid="DEL_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:6px 0;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;font-size:13px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
+    h+='<button data-n="'+presets[pi]+'" data-elid="DEL_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:12px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
   }
   h+='</div>';
   h+='<div style="display:flex;gap:9px">';
   h+='<button class="bs" onclick="closeAddLesson()" style="flex:1;padding:12px;border-radius:12px">취소</button>';
   h+='<button onclick="doDelLesson(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="flex:2;padding:12px;border-radius:12px;background:#DC2626;color:#fff;border:none;font-weight:800;font-size:15px;cursor:pointer">➖ 횟수 삭제</button>';
   h+='</div></div>';
+
   h+='</div></div>';
   return h;
 }

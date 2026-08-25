@@ -269,6 +269,21 @@ function delQuitStu(id){
   if(_noteListener===id){db.ref('quit_students/'+id+'/notes').off();_noteListener=null;}
   db.ref('quit_students/'+id).remove();G.sid=null;G.view='quit';G.curNotes={};R();
 }
+function switchAddTab(tab){
+  var panels={cur:'PANEL_CUR',new:'PANEL_NEW',del:'PANEL_DEL'};
+  var btns={cur:'TAB_CUR',new:'TAB_NEW',del:'TAB_DEL'};
+  var colors={cur:'#6366F1',new:'#4338CA',del:'#DC2626'};
+  Object.keys(panels).forEach(function(k){
+    var p=document.getElementById(panels[k]);
+    var b=document.getElementById(btns[k]);
+    if(p)p.style.display=(k===tab?'block':'none');
+    if(b){
+      b.style.background=(k===tab?colors[k]:'#F3F4F6');
+      b.style.color=(k===tab?'#fff':'#6B7280');
+    }
+  });
+}
+
 function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
 function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
 function addLesson(sid){

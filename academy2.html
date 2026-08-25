@@ -946,6 +946,7 @@ function vAddLessonModal(){
   h+='<b>'+xe(s.name)+'</b> · '+curTerm+'기 · '+s.usedLessons+'/'+s.totalLessons+'회 ('+r+'회 남음)</div>';
 
   /* ── 탭: 현재기수추가 / 새기수시작 / 횟수삭제 ── */
+  var presets=[1,2,3,4,5,6,7,8,9,10,11,12],pi;
   h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
   if(r>0){
     h+='<button id="TAB_CUR" data-tab="cur" onclick="switchAddTab(this.dataset.tab)" style="flex:1;padding:8px 4px;border-radius:10px;background:#6366F1;color:#fff;border:none;font-weight:700;font-size:12px;cursor:pointer">➕ 현재기수<br>추가</button>';
@@ -961,7 +962,6 @@ function vAddLessonModal(){
     h+='<label class="lbl">추가할 수업 횟수</label>';
     h+='<input class="fi" type="number" id="ADD_LESSON_CNT" value="4" min="1" max="200" style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px">';
     h+='<div style="display:flex;gap:5px;margin-bottom:14px">';
-    var presets=[1,2,3,4,5,6,7,8,9,10,11,12],pi;
     for(pi=0;pi<presets.length;pi++){
       h+='<button data-n="'+presets[pi]+'" data-elid="ADD_LESSON_CNT" onclick="setPreset(this.dataset.elid,this.dataset.n)" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:12px;font-weight:600;cursor:pointer">'+presets[pi]+'</button>';
     }

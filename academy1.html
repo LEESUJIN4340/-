@@ -113,6 +113,15 @@ function rem(s){return Math.max(0,(+s.totalLessons||0)-(+s.usedLessons||0));}
 function rc(r){return r<=0?'#EF4444':r===1?'#F97316':r<=3?'#F59E0B':'#10B981';}
 function eKey(email){return email.replace(/\./g,'_DOT_').replace(/@/g,'_AT_');}
 
+function parseD(n){
+  if(!n)return new Date(0);
+  if(n.dateRaw)return new Date(n.dateRaw);
+  var s=(n.date||'').replace(/[.]/g,'').trim();
+  var parts=s.split(' ').filter(function(p){return p.trim().length>0;});
+  if(parts.length>=3)return new Date(+parts[0],+parts[1]-1,+parts[2]);
+  return new Date(0);
+}
+
 function objArr(obj){
   var r=[],keys,i,k,s,copy,p;if(!obj)return r;keys=Object.keys(obj);
   for(i=0;i<keys.length;i++){k=keys[i];s=obj[k];copy={};for(p in s){if(Object.prototype.hasOwnProperty.call(s,p))copy[p]=s[p];}copy.id=copy.id||k;copy.totalLessons=+copy.totalLessons||0;copy.usedLessons=+copy.usedLessons||0;r.push(copy);}

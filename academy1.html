@@ -286,12 +286,22 @@ function switchAddTab(tab){
   });
 }
 
-function openAddLesson(sid){G.showAddLesson=true;G.addLessonSid=sid;R();}
+function openAddLesson(sid){
+  var s=stuById(sid);
+  if(!s){showToast('학생 정보를 불러오는 중입니다. 잠시 후 다시 눌러주세요.');return;}
+  G.showAddLesson=true;G.addLessonSid=sid;R();
+}
 function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
 function addLesson(sid){
   if(_addingLesson){showToast('⏳ 저장 중입니다. 잠시 후 다시 눌러주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  if(rem(s)<=0){openAddLesson(sid);return;}
+  if(rem(s)<=0){
+    /* ★ stuData에 해당 학생 있는지 확인 후 모달 열기 */
+    if(!G.stuData[sid]){showToast('학생 정보를 불러오는 중...');_addingLesson=false;return;}
+    _addingLesson=false;
+    openAddLesson(sid);
+    return;
+  }
   _addingLesson=true;
   db.ref('students/'+sid).once('value',function(stuSnap){
     var stuData=stuSnap.val();
@@ -913,7 +923,12 @@ function vForm(){
   return h+'</div></div>';
 }
 function vAddLessonModal(){
-  var s=stuById(G.addLessonSid);if(!s)return'';
+  var s=stuById(G.addLessonSid);
+  if(!s){
+    /* 학생 정보 없으면 모달 닫기 */
+    G.showAddLesson=false;G.addLessonSid=null;
+    return '';
+  }
   var curTerm=+s.term||1,nextTerm=curTerm+1,r=rem(s),h='';
   h='<div class="lesson-modal"><div class="lesson-modal-c">';
   h+='<div style="text-align:center;font-size:26px;margin-bottom:8px">'+(r<=0?'🔄':'➕')+'</div>';
@@ -1018,7 +1033,7 @@ function R(){
   }
   app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
     +(G.form&&G.admin?vForm():'')
-    +(G.showAddLesson&&G.addLessonSid?vAddLessonModal():'');
+    +(G.showAddLesson&&G.addLessonSid&&stuById(G.addLessonSid)?vAddLessonModal():'');
   if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}}
   var srchBtn=document.getElementById('SRCH_BTN');
   if(srchBtn)srchBtn.onclick=doSearch;

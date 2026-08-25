@@ -1016,27 +1016,52 @@ function R(){
   var app=document.getElementById('app'),sb=document.getElementById('SRCH_BOX');
   if(!G.user){if(sb)sb.style.display='none';app.innerHTML=vLogin();return;}
   if(sb)sb.style.display=(G.view==='srch')?'block':'none';
-  var toast=G.notif?'<div class="toast"><span style="font-size:22px">🔔</span><div style="flex:1;font-size:13px">'+xe(G.notif)+'</div><button onclick="G.notif=null;R()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;opacity:.7">✕</button></div>':'';
-  var body='';
-  if(!G.admin)body+='<div class="ibanner"><span style="font-size:17px">✏️</span><div><div style="font-weight:700;color:#065F46;font-size:13px">강사 모드</div><div style="font-size:11px;color:#047857">수업 진행 및 메모 작성 가능</div></div></div>';
-  if(G.view==='det'&&G.sid){body+=vDetail();}
-  else if(G.view==='assign'&&G.admin){body+=vAssign();}
-  else{
-    body+=vTabs();
-    if(G.view==='quit'&&G.admin){body+=vQuit();}
+  try{
+    var toast=G.notif?'<div class="toast"><span style="font-size:22px">🔔</span><div style="flex:1;font-size:13px">'+xe(G.notif)+'</div><button onclick="G.notif=null;R()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;opacity:.7">✕</button></div>':'';
+    var body='';
+    if(!G.admin)body+='<div class="ibanner"><span style="font-size:17px">✏️</span><div><div style="font-weight:700;color:#065F46;font-size:13px">강사 모드</div><div style="font-size:11px;color:#047857">수업 진행 및 메모 작성 가능</div></div></div>';
+    if(G.view==='det'&&G.sid){body+=vDetail();}
+    else if(G.view==='assign'&&G.admin){body+=vAssign();}
     else{
-      body+=alertPanelHtml();
-      if(G.admin)body+=dlPanelHtml();
-      if(G.view==='sch')body+=vSchedule();
-      else if(G.view==='all')body+=vAll();
+      body+=vTabs();
+      if(G.view==='quit'&&G.admin){body+=vQuit();}
+      else{
+        body+=alertPanelHtml();
+        if(G.admin)body+=dlPanelHtml();
+        if(G.view==='sch')body+=vSchedule();
+        else if(G.view==='all')body+=vAll();
+      }
+    }
+    /* ★ 모달 렌더링 - 오류 나도 안전하게 */
+    var modalHtml='';
+    if(G.showAddLesson&&G.addLessonSid){
+      var ms=stuById(G.addLessonSid);
+      if(ms){
+        try{modalHtml=vAddLessonModal();}
+        catch(me){
+          G.showAddLesson=false;G.addLessonSid=null;
+          modalHtml='';
+        }
+      } else {
+        G.showAddLesson=false;G.addLessonSid=null;
+      }
+    }
+    app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
+      +(G.form&&G.admin?vForm():'')
+      +modalHtml;
+    if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}}
+    var srchBtn=document.getElementById('SRCH_BTN');
+    if(srchBtn)srchBtn.onclick=doSearch;
+  } catch(e){
+    /* ★ 최후 안전망 - R() 오류 시 기본 화면으로 복구 */
+    console.error('R() 오류:',e);
+    G.showAddLesson=false;G.addLessonSid=null;G.form=false;G.enid=null;
+    try{
+      app.innerHTML=vHdr()+'<div class="main">'+vTabs()+(G.view==='sch'?vSchedule():vAll())+'</div>';
+    }catch(e2){
+      app.innerHTML='<div style="padding:20px;text-align:center"><button onclick="location.reload()" style="padding:12px 24px;background:#6366F1;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer">🔄 새로고침</button></div>';
     }
   }
-  app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
-    +(G.form&&G.admin?vForm():'')
-    +(G.showAddLesson&&G.addLessonSid&&stuById(G.addLessonSid)?vAddLessonModal():'');
-  if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}}
-  var srchBtn=document.getElementById('SRCH_BTN');
-  if(srchBtn)srchBtn.onclick=doSearch;
 }
 /* 다운로드 */
 function csvEsc(v){var s=String(v||'');if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)return'"'+s.replace(/"/g,'""')+'"';return s;}

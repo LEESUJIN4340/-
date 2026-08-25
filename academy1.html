@@ -592,14 +592,14 @@ function vHdr(){
       +'<div style="font-size:17px;font-weight:800;margin-top:2px">🏫 학원 관리</div></div>'
       +'<div style="display:flex;gap:6px">'
       +'<button onclick="openAdd()" style="padding:6px 12px;border-radius:9px;background:#fff;color:#4338CA;border:none;font-weight:800;font-size:12px;cursor:pointer">+ 등록</button>'
-      +'<button onclick="goView(\'assign\')" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button>'
+      +'<button onclick="goView(this.dataset.v)" data-v="assign" style="padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:600;cursor:pointer">⚙️ 배정</button>'
       +'<button onclick="doLogout()" style="padding:6px 12px;border-radius:9px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer">로그아웃</button>'
       +'</div></div>'
       +'<div style="display:flex;gap:8px;margin-top:10px">'
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ss.length+'</div><div style="color:#A5B4FC;font-size:9px">재학생</div></div>'
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+ac+'</div><div style="color:#A5B4FC;font-size:9px">⚠️ 임박</div></div>'
       +'<div class="hstat"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">'+dc2+'</div><div style="color:#A5B4FC;font-size:9px">완료 ✅</div></div>'
-      +'<div class="hstat" onclick="goView(\'quit\')" style="cursor:pointer"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div>'
+      +'<div class="hstat" onclick="goView(this.dataset.v)" data-v="quit" style="cursor:pointer"><div style="color:#FCD34D;font-size:17px;font-weight:800;line-height:1.2">'+qs+'</div><div style="color:#A5B4FC;font-size:9px">퇴원 📦</div></div>'
       +'</div></div>';
   } else {
     return '<div class="hdr">'
@@ -613,16 +613,18 @@ function vHdr(){
       +'</div></div>';
   }
 }
+
 function vTabs(){
   var tabs=[['sch','📅 요일별'],['srch','🔍 검색'],['all','📋 전체']];
   if(G.admin)tabs.push(['quit','📦 퇴원']);
   var h='<div class="tabs">',i,t;
   for(i=0;i<tabs.length;i++){
     t=tabs[i];
-    h+='<button class="tab'+(t[0]==='quit'?' quit-tab':'')+(G.view===t[0]?' on':'')+'" onclick="goView(\''+t[0]+'\')" >'+t[1]+'</button>';
+    h+='<button class="tab'+(t[0]==='quit'?' quit-tab':'')+(G.view===t[0]?' on':'')+'" onclick="goView(this.dataset.v)" data-v="'+t[0]+'">'+t[1]+'</button>';
   }
   return h+'</div>';
 }
+
 function vSchedule(){
   var ss=allStu(),ds=[],i,s,cnt,d,dc2,on,h='',dayList;
   for(i=0;i<ss.length;i++){dayList=ss[i].days?ss[i].days.split(','):[ss[i].day||'월'];if(dayList.indexOf(G.selDay)>=0)ds.push(ss[i]);}
@@ -632,7 +634,7 @@ function vSchedule(){
     d=DAYS[i];cnt=0;
     for(var j=0;j<ss.length;j++){var dl=ss[j].days?ss[j].days.split(','):[ss[j].day||'월'];if(dl.indexOf(d)>=0)cnt++;}
     dc2=DC[d];on=(G.selDay===d);
-    h+='<button class="dtab" onclick="selDay(\''+d+'\')" style="border-color:'+(on?dc2.bd:'#E5E7EB')+';background:'+(on?dc2.bg:'#fff')+';color:'+(on?dc2.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';
+    h+='<button class="dtab" onclick="selDay(this.dataset.v)" data-v="'+d+'" style="border-color:'+(on?dc2.bd:'#E5E7EB')+';background:'+(on?dc2.bg:'#fff')+';color:'+(on?dc2.tx:'#6B7280')+';font-weight:'+(on?800:500)+'">'+d+'<span style="font-size:8px;opacity:.8">'+cnt+'명</span></button>';
   }
   h+='</div>';
   if(!ds.length)return h+'<div class="empty"><div style="font-size:30px;margin-bottom:7px">📭</div><div style="font-size:13px">등록된 수강생이 없습니다</div></div>';
@@ -717,7 +719,7 @@ function vAssign(){
         h+='</div></div>';
       }
     }
-    h+='<button onclick="goView(\'sch\')" style="width:100%;background:#F3F4F6;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;margin-top:4px">← 돌아가기</button>';
+    h+='<button onclick="goView(this.dataset.v)" data-v="sch" style="width:100%;background:#F3F4F6;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;margin-top:4px">← 돌아가기</button>';
   } else {
     var key2=eKey(G.assignTeacher),assigned2=G.assignData[key2]||{},cnt3=Object.keys(assigned2).length;
     h+='<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px;border:2px solid #E5E7EB">';

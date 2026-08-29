@@ -185,17 +185,18 @@ function startListen(){
       if(G.admin&&rem(basic)<=0&&!basic.notified){showToast(basic.name+' 학생 수업 완료!');db.ref('students/'+k+'/notified').set(true);}
       G.stuData[k]=basic;
     }
-    /* ★ 상세 화면이면 노트 리스너 항상 재연결 */
+    /* ★ 상세 화면이면 노트 최신 데이터 직접 읽기 */
     if(G.view==='det'&&G.sid){
-      /* 기존 리스너 해제 후 새로 연결 - 강사 메모 실시간 수신 보장 */
-      if(_noteListener){
-        db.ref('students/'+_noteListener+'/notes').off();
-        db.ref('quit_students/'+_noteListener+'/notes').off();
-        _noteListener=null;
-      }
-      loadNotes(G.sid);
+      (function(sid){
+        var rp2=G.stuData[sid]?'students':'quit_students';
+        db.ref(rp2+'/'+sid+'/notes').once('value',function(snap){
+          G.curNotes=snap.val()||{};
+          safeR();
+        });
+      })(G.sid);
+    } else {
+      safeR();
     }
-    safeR();
   });
   db.ref('quit_students').on('value',function(snap){
     var data=snap.val()||{},keys,i,k,s,basic,p;
@@ -224,16 +225,12 @@ function loadNotes(sid){
   G.curNotes={};
   if(!sid)return;
   _noteListener=sid;
-  /* ★ students/quit_students 양쪽 모두 확인 후 올바른 경로로 리스너 */
   var rp=G.stuData[sid]?'students':'quit_students';
+  /* ★ on()으로 실시간 수신 - 모달 열려있어도 G.curNotes는 항상 갱신 */
   db.ref(rp+'/'+sid+'/notes').on('value',function(snap){
     G.curNotes=snap.val()||{};
-    /* ★ 화면이 바뀌지 않았을 때만 갱신 */
-    if(G.view==='det'&&G.sid===sid){
-      /* 모달/폼 열려있으면 갱신 안함 (버튼 안눌림 방지) */
-      if(!G.showAddLesson&&!G.form){
-        R();
-      }
+    if(G.view==='det'&&G.sid===sid&&!G.showAddLesson&&!G.form){
+      R();
     }
   });
 }

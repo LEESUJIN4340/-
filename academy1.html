@@ -185,8 +185,14 @@ function startListen(){
       if(G.admin&&rem(basic)<=0&&!basic.notified){showToast(basic.name+' 학생 수업 완료!');db.ref('students/'+k+'/notified').set(true);}
       G.stuData[k]=basic;
     }
-    /* ★ 상세 화면이면 노트 리스너 재확인 (끊겼을 때만) */
-    if(G.view==='det'&&G.sid&&!_noteListener){
+    /* ★ 상세 화면이면 노트 리스너 항상 재연결 */
+    if(G.view==='det'&&G.sid){
+      /* 기존 리스너 해제 후 새로 연결 - 강사 메모 실시간 수신 보장 */
+      if(_noteListener){
+        db.ref('students/'+_noteListener+'/notes').off();
+        db.ref('quit_students/'+_noteListener+'/notes').off();
+        _noteListener=null;
+      }
       loadNotes(G.sid);
     }
     safeR();

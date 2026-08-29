@@ -130,6 +130,10 @@ function objArr(obj){
 function noteArr(obj){
   var r=[],keys,i,k,n,copy,p;if(!obj)return r;keys=Object.keys(obj);
   for(i=0;i<keys.length;i++){k=keys[i];n=obj[k];copy={};for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}copy.id=copy.id||k;r.push(copy);}
+  /* term 없는 노트는 마지막 노트의 term 사용 */
+  var maxTerm=1;
+  for(var ri=0;ri<r.length;ri++)if(+r[ri].term>maxTerm)maxTerm=+r[ri].term;
+  for(var ri=0;ri<r.length;ri++)if(!r[ri].term||+r[ri].term<=0)r[ri].term=maxTerm;
   return r.sort(function(a,b){
     var ta=+a.term||1,tb=+b.term||1;
     if(ta!==tb)return ta-tb;
@@ -233,19 +237,37 @@ function loadNotes(sid){
 }
 function refreshNotes(sid){
   if(!sid)return;
-  /* Firebase에서 직접 최신 메모 읽기 */
-  db.ref('students/'+sid+'/notes').once('value',function(snap){
-    var val=snap.val();
-    if(val){
-      G.curNotes=val;
+  showToast('🔄 메모 불러오는 중...');
+  /* students 경로에서 학생 전체 데이터 읽기 */
+  db.ref('students/'+sid).once('value',function(snap){
+    var data=snap.val();
+    if(data&&data.notes){
+      /* ★ notes 직접 추출 */
+      G.curNotes=data.notes;
+      /* usedLessons, totalLessons도 갱신 */
+      if(G.stuData[sid]){
+        G.stuData[sid].usedLessons=+data.usedLessons||0;
+        G.stuData[sid].totalLessons=+data.totalLessons||0;
+      }
       R();
-      showToast('✅ 메모를 새로 불러왔습니다.');
+      showToast('✅ '+Object.keys(data.notes).length+'개 메모 불러왔습니다.');
+    } else if(data&&!data.notes){
+      G.curNotes={};
+      showToast('📭 수업 메모가 없습니다.');
+      R();
     } else {
       /* students에 없으면 quit_students 확인 */
-      db.ref('quit_students/'+sid+'/notes').once('value',function(snap2){
-        G.curNotes=snap2.val()||{};
-        R();
-        showToast('✅ 메모를 새로 불러왔습니다.');
+      db.ref('quit_students/'+sid).once('value',function(snap2){
+        var data2=snap2.val();
+        if(data2&&data2.notes){
+          G.curNotes=data2.notes;
+          R();
+          showToast('✅ '+Object.keys(data2.notes).length+'개 메모 불러왔습니다.');
+        } else {
+          G.curNotes={};
+          showToast('📭 수업 메모가 없습니다.');
+          R();
+        }
       });
     }
   });
@@ -333,25 +355,19 @@ function closeAddLesson(){G.showAddLesson=false;G.addLessonSid=null;R();}
 function addLesson(sid){
   if(_addingLesson){showToast('⏳ 저장 중입니다. 잠시 후 다시 눌러주세요.');return;}
   var s=stuById(sid);if(!s)return;
-  if(rem(s)<=0){
-    /* ★ stuData에 해당 학생 있는지 확인 후 모달 열기 */
-    if(!G.stuData[sid]){showToast('학생 정보를 불러오는 중...');_addingLesson=false;return;}
-    _addingLesson=false;
-    openAddLesson(sid);
-    return;
-  }
+  if(rem(s)<=0){openAddLesson(sid);return;}
   _addingLesson=true;
-  db.ref('students/'+sid).once('value',function(stuSnap){
-    var stuData=stuSnap.val();
-    if(!stuData){_addingLesson=false;return;}
-    var term=+stuData.term||1;
-    var totalLessons=+stuData.totalLessons||0;
-    var usedLessons=+stuData.usedLessons||0;
-    var r2=Math.max(0,totalLessons-usedLessons);
-    if(r2<=0){_addingLesson=false;openAddLesson(sid);return;}
-    var globalUsed=Math.min(usedLessons+1,totalLessons);
-    var r3=Math.max(0,totalLessons-globalUsed);
-    var notes=stuData.notes||{};
+
+  /* ★ G.stuData에서 직접 읽기 (Firebase once 불필요) */
+  var term=+s.term||1;
+  var totalLessons=+s.totalLessons||0;
+  var usedLessons=+s.usedLessons||0;
+  var globalUsed=Math.min(usedLessons+1,totalLessons);
+  var r3=Math.max(0,totalLessons-globalUsed);
+
+  /* ★ notes만 별도로 읽어서 maxNum 계산 */
+  db.ref('students/'+sid+'/notes').once('value',function(notesSnap){
+    var notes=notesSnap.val()||{};
     var nkeys=Object.keys(notes),i,maxNum=0;
     for(i=0;i<nkeys.length;i++){
       var n=notes[nkeys[i]];
@@ -359,18 +375,26 @@ function addLesson(sid){
       if(nTerm===term&&(+n.lessonNum||0)>maxNum)maxNum=+n.lessonNum||0;
     }
     var nu=maxNum+1;
-    var nid=uid(),upd={usedLessons:globalUsed};
-    upd['notes/'+nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
-    db.ref('students/'+sid).update(upd).then(function(){
+    var nid=uid();
+    var noteUpd={};
+    noteUpd[nid]={id:nid,date:new Date().toLocaleDateString('ko-KR'),content:'',lessonNum:nu,term:term};
+
+    /* ★ notes와 usedLessons 각각 저장 */
+    db.ref('students/'+sid+'/notes').update(noteUpd).then(function(){
+      db.ref('students/'+sid+'/usedLessons').set(globalUsed).then(function(){
+        _addingLesson=false;
+        if(r3===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
+        if(r3===0)showToast(s.name+' 모든 수업 완료!');
+        if(G.view==='det'&&G.sid===sid)refreshNotes(sid);
+      });
+    }).catch(function(e){
       _addingLesson=false;
-      if(r3===1)showToast('⚠️ '+s.name+' 학생 수업이 1회 남았습니다!');
-      if(r3===0)showToast(s.name+' 모든 수업 완료!');
-      /* ★ 수업 진행 후 노트 리스너 재연결로 최신 데이터 보장 */
-      if(G.view==='det'&&G.sid===sid){
-        loadNotes(sid);
-      }
-    }).catch(function(e){_addingLesson=false;showToast('❌ 저장 실패: '+e.message);});
-  }).catch(function(e){_addingLesson=false;showToast('❌ 오류: '+e.message);});
+      showToast('❌ 저장 실패: '+e.message);
+    });
+  }).catch(function(e){
+    _addingLesson=false;
+    showToast('❌ 오류: '+e.message);
+  });
 }
 
 function doAddLessonCur(sid){
@@ -555,7 +579,6 @@ function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut(
 function goView(v){G.prevView=G.view;G.view=v;R();}
 function goStu(id){
   G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;
-  /* ★ 기존 리스너 완전 해제 후 새로 시작 */
   if(_noteListener){
     db.ref('students/'+_noteListener+'/notes').off();
     db.ref('quit_students/'+_noteListener+'/notes').off();
@@ -563,7 +586,24 @@ function goStu(id){
   }
   G.curNotes={};
   R();
-  loadNotes(id);
+  /* ★ 노트 로드: students 전체에서 notes 직접 추출 */
+  db.ref('students/'+id).once('value',function(snap){
+    var data=snap.val();
+    if(data){
+      G.curNotes=data.notes||{};
+      if(G.stuData[id]){
+        G.stuData[id].usedLessons=+data.usedLessons||0;
+        G.stuData[id].totalLessons=+data.totalLessons||0;
+      }
+    }
+    if(G.view==='det'&&G.sid===id){R();}
+    /* on() 리스너도 연결해서 이후 변경사항 수신 */
+    _noteListener=id;
+    db.ref('students/'+id+'/notes').on('value',function(nSnap){
+      G.curNotes=nSnap.val()||{};
+      if(G.view==='det'&&G.sid===id&&!G.showAddLesson&&!G.form)R();
+    });
+  });
 }
 function goBack(){
   if(_noteListener){
@@ -1167,14 +1207,15 @@ function autoFixAllLessons(){
       var nkeys=Object.keys(notes);
       if(!nkeys.length)return;
 
-      /* ★ term이 있는 노트만 처리 - term은 절대 변경하지 않음 */
+      /* ★ 모든 노트 처리 - term없으면 학생의 현재 term 사용 */
+      var stuTermVal=+stu.term||1;
       var arr=nkeys.map(function(k){
         var n=notes[k];n.key=k;
         n.lessonNum=+n.lessonNum||0;
-        n.hasTerm=(n.term&&+n.term>0);
-        n.termVal=n.hasTerm?+n.term:null;
+        /* term 없으면 학생 현재 term으로 보정 */
+        n.termVal=(n.term&&+n.term>0)?+n.term:stuTermVal;
         return n;
-      }).filter(function(n){return n.hasTerm;});
+      });
 
       if(!arr.length)return;
 
@@ -1197,9 +1238,15 @@ function autoFixAllLessons(){
         var termArr=groups[term];
         termArr.sort(function(a,b){return parseD(a)-parseD(b);});
         termArr.forEach(function(n,j){
-          /* ★ lessonNum만 수정, term 절대 변경 안함 */
+          /* lessonNum 수정 */
           if(n.lessonNum!==j+1){
             upd['notes/'+n.key+'/lessonNum']=j+1;
+            needFix=true;
+          }
+          /* ★ term 없으면 보정 */
+          var origNote=notes[n.key];
+          if(origNote&&(!origNote.term||+origNote.term<=0)){
+            upd['notes/'+n.key+'/term']=term;
             needFix=true;
           }
         });

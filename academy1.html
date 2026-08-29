@@ -185,7 +185,7 @@ function startListen(){
       if(G.admin&&rem(basic)<=0&&!basic.notified){showToast(basic.name+' 학생 수업 완료!');db.ref('students/'+k+'/notified').set(true);}
       G.stuData[k]=basic;
     }
-    /* ★ 상세 화면 보는 중이면 노트 리스너 재확인 */
+    /* ★ 상세 화면이면 노트 리스너 재확인 (끊겼을 때만) */
     if(G.view==='det'&&G.sid&&!_noteListener){
       loadNotes(G.sid);
     }
@@ -209,17 +209,26 @@ function startListen(){
   });
 }
 function loadNotes(sid){
+  /* 기존 리스너 완전 해제 */
   if(_noteListener){
     db.ref('students/'+_noteListener+'/notes').off();
     db.ref('quit_students/'+_noteListener+'/notes').off();
     _noteListener=null;
   }
-  G.curNotes={};if(!sid)return;
+  G.curNotes={};
+  if(!sid)return;
   _noteListener=sid;
+  /* ★ students/quit_students 양쪽 모두 확인 후 올바른 경로로 리스너 */
   var rp=G.stuData[sid]?'students':'quit_students';
   db.ref(rp+'/'+sid+'/notes').on('value',function(snap){
     G.curNotes=snap.val()||{};
-    if(G.view==='det'&&G.sid===sid)R();
+    /* ★ 화면이 바뀌지 않았을 때만 갱신 */
+    if(G.view==='det'&&G.sid===sid){
+      /* 모달/폼 열려있으면 갱신 안함 (버튼 안눌림 방지) */
+      if(!G.showAddLesson&&!G.form){
+        R();
+      }
+    }
   });
 }
 function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
@@ -522,12 +531,15 @@ function doLogout(){if(confirm('로그아웃 하시겠습니까?'))auth.signOut(
 function goView(v){G.prevView=G.view;G.view=v;R();}
 function goStu(id){
   G.prevView=G.view;G.sid=id;G.view='det';G.enid=null;
+  /* ★ 기존 리스너 완전 해제 후 새로 시작 */
   if(_noteListener){
     db.ref('students/'+_noteListener+'/notes').off();
     db.ref('quit_students/'+_noteListener+'/notes').off();
     _noteListener=null;
   }
-  G.curNotes={};R();loadNotes(id);
+  G.curNotes={};
+  R();
+  loadNotes(id);
 }
 function goBack(){
   if(_noteListener){
@@ -1181,14 +1193,6 @@ function autoFixAllLessons(){
     });
 
     setTimeout(function(){
-      if(G.view==='det'&&G.sid){
-        if(_noteListener){
-          var rp2=G.stuData[_noteListener]?'students':'quit_students';
-          db.ref(rp2+'/'+_noteListener+'/notes').off();
-          _noteListener=null;
-        }
-        loadNotes(G.sid);
-      }
       if(fixedCount>0)showToast('🔧 '+fixedCount+'명의 수업 회차가 자동 수정되었습니다.');
     },2000);
   });

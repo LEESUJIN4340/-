@@ -231,6 +231,26 @@ function loadNotes(sid){
   attachListener('students');
   attachListener('quit_students');
 }
+function refreshNotes(sid){
+  if(!sid)return;
+  /* Firebase에서 직접 최신 메모 읽기 */
+  db.ref('students/'+sid+'/notes').once('value',function(snap){
+    var val=snap.val();
+    if(val){
+      G.curNotes=val;
+      R();
+      showToast('✅ 메모를 새로 불러왔습니다.');
+    } else {
+      /* students에 없으면 quit_students 확인 */
+      db.ref('quit_students/'+sid+'/notes').once('value',function(snap2){
+        G.curNotes=snap2.val()||{};
+        R();
+        showToast('✅ 메모를 새로 불러왔습니다.');
+      });
+    }
+  });
+}
+
 function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
 
 function saveStu(){
@@ -852,12 +872,14 @@ function vDetail(){
   }
   h+='<button class="dl-btn" onclick="downloadStudentNotes(this.dataset.sid)" data-sid="'+xe(s.id)+'">📥 이 학생 수업메모 저장</button>';
   h+='<div style="height:10px"></div>';
-  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;flex-wrap:wrap;gap:5px">';
   h+='<span style="font-size:14px;font-weight:700;color:#374151">📝 수업 기록 ('+ns.length+'회)</span>';
+  h+='<div style="display:flex;gap:5px">';
+  h+='<button onclick="refreshNotes(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="background:#F0F9FF;color:#0369A1;border:2px solid #BAE6FD;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">🔄 새로고침</button>';
   if(G.admin&&ns.length>0&&!isQuit){
     h+='<button onclick="reorderLessons(this.dataset.sid)" data-sid="'+xe(s.id)+'" style="background:#FFF7ED;color:#F97316;border:2px solid #FED7AA;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer">🔧 회차 자동정렬</button>';
   }
-  h+='</div>';
+  h+='</div></div>';
   if(!ns.length){
     h+='<div style="text-align:center;color:#9CA3AF;padding:28px;background:#F9FAFB;border-radius:12px;font-size:13px"><div style="font-size:26px;margin-bottom:7px">📋</div>아직 수업 기록이 없습니다</div>';
   } else {

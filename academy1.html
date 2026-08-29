@@ -214,18 +214,22 @@ function loadNotes(sid){
   G.curNotes={};
   if(!sid)return;
   _noteListener=sid;
-  var rp=G.stuData[sid]?'students':'quit_students';
-  /* ★ on()으로 실시간 수신 유지 */
-  db.ref(rp+'/'+sid+'/notes').on('value',function(nSnap){
-    G.curNotes=nSnap.val()||{};
-    /* 상세 화면이고 같은 학생이면 항상 화면 갱신 */
-    if(G.view==='det'&&G.sid===sid){
-      /* 단, 모달/폼 열려있으면 R() 스킵 (버튼 안눌림 방지) */
-      if(!G.showAddLesson&&!G.form){
-        R();
+
+  /* ★ students와 quit_students 양쪽 모두 on() 리스너 연결
+     어느 쪽에 데이터가 있든 실시간으로 수신 */
+  function attachListener(rp){
+    db.ref(rp+'/'+sid+'/notes').on('value',function(nSnap){
+      var val=nSnap.val();
+      if(val!==null||rp==='students'){
+        G.curNotes=val||{};
+        if(G.view==='det'&&G.sid===sid&&!G.showAddLesson&&!G.form){
+          R();
+        }
       }
-    }
-  });
+    });
+  }
+  attachListener('students');
+  attachListener('quit_students');
 }
 function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
 

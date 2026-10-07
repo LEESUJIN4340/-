@@ -97,7 +97,8 @@ var G={
   view:'sch',prevView:'sch',selDay:'월',sid:null,
   notif:null,form:false,esid:null,fdays:['월'],enid:null,
   showAddLesson:false,addLessonSid:null,
-  assignTeacher:null
+  assignTeacher:null,
+  _savedNoteContent:null,_savedNoteCursorPos:null
 };
 var _saving=false,_ime=false,_pend=false,_noteListener=null,_addingLesson=false;
 
@@ -130,10 +131,6 @@ function objArr(obj){
 function noteArr(obj){
   var r=[],keys,i,k,n,copy,p;if(!obj)return r;keys=Object.keys(obj);
   for(i=0;i<keys.length;i++){k=keys[i];n=obj[k];copy={};for(p in n){if(Object.prototype.hasOwnProperty.call(n,p))copy[p]=n[p];}copy.id=copy.id||k;r.push(copy);}
-  /* term 없는 노트는 마지막 노트의 term 사용 */
-  var maxTerm=1;
-  for(var ri=0;ri<r.length;ri++)if(+r[ri].term>maxTerm)maxTerm=+r[ri].term;
-  for(var ri=0;ri<r.length;ri++)if(!r[ri].term||+r[ri].term<=0)r[ri].term=maxTerm;
   return r.sort(function(a,b){
     var ta=+a.term||1,tb=+b.term||1;
     if(ta!==tb)return ta-tb;
@@ -273,7 +270,20 @@ function refreshNotes(sid){
   });
 }
 
-function safeR(){var si=document.getElementById('SRCH_INPUT');if(_ime||(si&&document.activeElement===si)){_pend=true;return;}R();}
+function safeR(){
+  var si=document.getElementById('SRCH_INPUT');
+  if(_ime||(si&&document.activeElement===si)){_pend=true;return;}
+  /* ★ 메모 편집 중이면 textarea 내용 저장 후 렌더 */
+  if(G.enid){
+    var ta=document.getElementById('NOTE_TA');
+    if(ta&&document.activeElement===ta){
+      /* 포커스가 textarea에 있으면 현재 내용 임시 보관 후 렌더 */
+      G._savedNoteContent=ta.value;
+      G._savedNoteCursorPos=ta.selectionStart;
+    }
+  }
+  R();
+}
 
 function saveStu(){
   if(_saving)return;
@@ -1136,7 +1146,20 @@ function R(){
     app.innerHTML=toast+vHdr()+'<div class="main">'+body+'</div>'
       +(G.form&&G.admin?vForm():'')
       +modalHtml;
-    if(G.enid){var ta=document.getElementById('NOTE_TA');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}}
+    if(G.enid){
+      var ta=document.getElementById('NOTE_TA');
+      if(ta){
+        /* ★ 임시 저장된 내용이 있으면 복원 (외부 Firebase 변경으로 재렌더 시) */
+        if(G._savedNoteContent!==undefined&&G._savedNoteContent!==null){
+          ta.value=G._savedNoteContent;
+          var cp=G._savedNoteCursorPos||ta.value.length;
+          G._savedNoteContent=null;G._savedNoteCursorPos=null;
+          ta.focus();ta.setSelectionRange(cp,cp);
+        } else {
+          ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+        }
+      }
+    }
     var srchBtn=document.getElementById('SRCH_BTN');
     if(srchBtn)srchBtn.onclick=doSearch;
   } catch(e){
@@ -1276,7 +1299,7 @@ auth.onAuthStateChanged(function(user){
   if(user){
     G.user=user;G.admin=(user.email===ADMIN_EMAIL);
     startListen();
-    if(G.admin){setTimeout(autoFixAllLessons,3000);}
+    /* autoFixAllLessons 비활성화 */
   } else {
     G.user=null;G.admin=false;G.stuData={};G.quitData={};G.curNotes={};
     G.assignData={};G.teachers=[];G.assignTeacher=null;

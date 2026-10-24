@@ -224,12 +224,14 @@ function loadNotes(sid){
       if(val!==null||rp==='students'){
         G.curNotes=val||{};
         if(G.view==='det'&&G.sid===sid&&!G.showAddLesson&&!G.form){
+          /* ★ 편집 중이면 R() 완전 차단 - 내용 삭제 방지 */
           if(G.enid){
             var ta=document.getElementById('NOTE_TA');
-            if(ta&&document.activeElement===ta){
+            if(ta){
               G._savedNoteContent=ta.value;
               G._savedNoteCursorPos=ta.selectionStart;
             }
+            return;
           }
           R();
         }
@@ -238,6 +240,31 @@ function loadNotes(sid){
   }
   attachListener('students');
   attachListener('quit_students');
+  /* ★ 기수 자동복구: 학생 메모 로드 시 term 없는 메모 자동 수정 */
+  db.ref('students/'+sid).once('value',function(s1){
+    var sd=s1.val();if(!sd)return;
+    var stuTerm=+(sd.term)||1;
+    var notes=sd.notes||{};var fixUpd={};
+    Object.keys(notes).forEach(function(nk){
+      var n=notes[nk];
+      if(!n.term||+n.term<=0){fixUpd[nk+'/term']=stuTerm;}
+    });
+    if(Object.keys(fixUpd).length>0){
+      db.ref('students/'+sid+'/notes').update(fixUpd);
+    }
+  });
+  db.ref('quit_students/'+sid).once('value',function(s1){
+    var sd=s1.val();if(!sd)return;
+    var stuTerm=+(sd.term)||1;
+    var notes=sd.notes||{};var fixUpd={};
+    Object.keys(notes).forEach(function(nk){
+      var n=notes[nk];
+      if(!n.term||+n.term<=0){fixUpd[nk+'/term']=stuTerm;}
+    });
+    if(Object.keys(fixUpd).length>0){
+      db.ref('quit_students/'+sid+'/notes').update(fixUpd);
+    }
+  });
 }
 function refreshNotes(sid){
   if(!sid)return;
@@ -280,13 +307,14 @@ function refreshNotes(sid){
 function safeR(){
   var si=document.getElementById('SRCH_INPUT');
   if(_ime||(si&&document.activeElement===si)){_pend=true;return;}
-  /* ★ 메모 편집 중이면 textarea 내용 저장 후 렌더 */
+  /* ★ 메모 편집 중이면 R() 완전 차단 - 내용 삭제 방지 */
   if(G.enid){
     var ta=document.getElementById('NOTE_TA');
-    if(ta&&document.activeElement===ta){
+    if(ta){
       G._savedNoteContent=ta.value;
       G._savedNoteCursorPos=ta.selectionStart;
     }
+    _pend=true;return;
   }
   R();
 }
